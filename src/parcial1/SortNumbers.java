@@ -1,4 +1,4 @@
-package Parcial1;
+package parcial1;
 
 import java.util.Arrays;
 

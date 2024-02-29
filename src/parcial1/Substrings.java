@@ -1,4 +1,4 @@
-package Parcial1;
+package parcial1;
 
 public class Substrings {
     public static void main(String[] args) {

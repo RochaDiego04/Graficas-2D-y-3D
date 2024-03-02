@@ -34,7 +34,7 @@ public class EspiralArquimides extends JFrame implements Runnable {
     }
 
     public void paint(Graphics g) {
-        /* Se dibuja lo que haya en la memoria RAM*/
+        /* Se dibuja en el lienzo o contexto gráfico, todo lo que haya en la memoria RAM o buffer*/
         g.drawImage(bufferImage, 0, 0, null);
     }
 
@@ -52,11 +52,11 @@ public class EspiralArquimides extends JFrame implements Runnable {
 
             /* Los cambios de la espiral quedan en la memoria RAM, almacenados en la dirección de memoria del objeto "g"*/
             try {
-                Thread.sleep(6);
+                Thread.sleep(1);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            repaint();
+            repaint(); // llama al metodo paint
         }
     }
 

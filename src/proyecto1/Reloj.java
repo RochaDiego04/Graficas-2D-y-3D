@@ -3,39 +3,52 @@ package proyecto1;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.time.LocalTime;
-import java.util.HashMap;
-import java.util.Map;
 import javax.swing.*;
 
 public class Reloj extends JFrame implements Runnable {
     private BufferedImage backgroundBufferImage;
-    private Thread hilo;
+    private int horas;
+    private int minutos;
+    private int segundos;
 
     public Reloj() {
-        /* Propiedades de la ventana */
         setTitle("Reloj análogo");
         setSize(800, 800);
-        setBackground(Color.BLACK);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
         setResizable(false);
 
-        /* Crear bufferImage con las dimensiones de la ventana */
-        this.backgroundBufferImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
+        backgroundBufferImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
 
-        /* Hilo */
-        hilo = new Thread(this);
+        Thread hilo = new Thread(this);
         hilo.start();
+    }
+
+    private void dibujarFondo(Graphics g) {
+        int centerX = getWidth() / 2;
+        int centerY = getHeight() / 2;
+
+        g.setColor(Color.BLACK);
+        g.fillRect(0, 0, getWidth(), getHeight());
+
+        RelojFondo.dibujarMarcoReloj(g, centerX, centerY);
+        RelojFondo.dibujarInteriorReloj(g, centerX, centerY);
+        RelojFondo.dibujarHorasReloj(g, centerX, centerY);
     }
 
     public void run() {
         while (true) {
-            Graphics g = backgroundBufferImage.createGraphics();
-            dibujarReloj(g);
+            obtenerHorarioDelSistema();
+
+            Graphics g = backgroundBufferImage.getGraphics();
+            dibujarFondo(g);
+            dibujarManecillas(g);
+            g.dispose();
+
             repaint();
             try {
-                Thread.sleep(1000);
+                Thread.sleep(20);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -44,61 +57,27 @@ public class Reloj extends JFrame implements Runnable {
 
     public void paint(Graphics g) {
         g.drawImage(backgroundBufferImage, 0, 0, null);
-        dibujarManecillas(g);
     }
 
-    private void dibujarReloj(Graphics g) {
-        int centerX = getWidth() / 2;  // Calcula el centro X del círculo
-        int centerY = getHeight() / 2; // Calcula el centro Y del círculo
-
-        // Dibujar marco de circulo de fondo
-        g.setColor(new Color(53,20,20));
-        g.fillOval(centerX - 220, centerY - 220, 440, 440);
-
-        // Dibujar circulo de fondo
-        g.setColor(Color.WHITE);
-        g.fillOval(centerX - 200, centerY - 200, 400, 400);
-
-        // Dibujar las horas
-        g.setColor(Color.BLACK);
-        g.setFont(g.getFont().deriveFont(Font.BOLD, 24f));
-
-        for (int i = 1; i <= 12; i++) {
-            double angle = Math.toRadians(i * 30 - 90); // Calcular el ángulo para cada hora (en radianes)
-            int x = (int) (centerX + 160 * Math.cos(angle)); // Calcular la posición X del texto
-            int y = (int) (centerY + 160 * Math.sin(angle)); // Calcular la posición Y del texto
-            String hour = Integer.toString(i); // Convertir el número de hora a String
-            FontMetrics fm = g.getFontMetrics(); // Obtener las métricas de la fuente
-            int width = fm.stringWidth(hour); // Obtener el ancho del texto
-            int height = fm.getHeight(); // Obtener la altura del texto
-            g.drawString(hour, x - width / 2, y + height / 4); // Dibujar el texto centrado en la posición calculada
-        }
-    }
-
-    private Map<String, Integer> obtenerHorarioDelSistema() {
+    private void obtenerHorarioDelSistema() {
         LocalTime horaActual = LocalTime.now();
-        int horas = horaActual.getHour();
-        int minutos = horaActual.getMinute();
-        int segundos = horaActual.getSecond();
-
-        System.out.println("segundos:" + segundos + "\nminutos"+ minutos + "\nhoras" + horas + "\n");
-
-        Map<String, Integer> horario = new HashMap<>();
-        horario.put("horas", horas);
-        horario.put("minutos", minutos);
-        horario.put("segundos", segundos);
-
-        return horario;
+        horas = horaActual.getHour();
+        minutos = horaActual.getMinute();
+        segundos = horaActual.getSecond();
+        System.out.println("horas: " + horas + " minutos: " + minutos + " segundos: " + segundos);
     }
 
     private void dibujarManecillas(Graphics g) {
-        int centerX = getWidth() / 2;  // Calcula el centro X del círculo
-        int centerY = getHeight() / 2; // Calcula el centro Y del círculo
+        int centerX = getWidth() / 2;
+        int centerY = getHeight() / 2;
 
-        Map<String, Integer> horarioActual = obtenerHorarioDelSistema();
-        dibujarManecilla(g, centerX, centerY, horarioActual.get("horas") * 30 - 90, 80, Color.BLACK);
-        dibujarManecilla(g, centerX, centerY, horarioActual.get("minutos") * 6 - 90, 120, Color.BLUE);
-        dibujarManecilla(g, centerX, centerY, horarioActual.get("segundos") * 6 - 90, 140, Color.RED);
+        double anguloHoras = (360.0 / 12) * ((horas % 12) + minutos / 60.0) - 90;
+        double anguloMinutos = (360.0 / 60) * (minutos + segundos / 60.0) - 90;
+        double anguloSegundos = (360.0 / 60) * (segundos + (double) System.currentTimeMillis() % 1000 / 1000) - 90;
+
+        dibujarManecilla(g, centerX, centerY, anguloHoras, 50, Color.BLACK);
+        dibujarManecilla(g, centerX, centerY, anguloMinutos, 80, Color.BLUE);
+        dibujarManecilla(g, centerX, centerY, anguloSegundos, 100, Color.RED);
     }
 
     private void dibujarManecilla(Graphics g, int x, int y, double angulo, int longitud, Color color) {

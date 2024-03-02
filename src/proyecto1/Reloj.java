@@ -2,6 +2,7 @@ package proyecto1;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 import javax.swing.*;
@@ -75,10 +76,12 @@ public class Reloj extends JFrame implements Runnable {
     }
 
     private Map<String, Integer> obtenerHorarioDelSistema() {
-        long tiempoActual = System.currentTimeMillis();
-        int segundos = (int) (tiempoActual / 1000 % 60);
-        int minutos = (int) ((tiempoActual / (1000 * 60)) % 60);
-        int horas = (int) ((tiempoActual / (1000 * 60 * 60)) % 12);
+        LocalTime horaActual = LocalTime.now();
+        int horas = horaActual.getHour();
+        int minutos = horaActual.getMinute();
+        int segundos = horaActual.getSecond();
+
+        System.out.println("segundos:" + segundos + "\nminutos"+ minutos + "\nhoras" + horas + "\n");
 
         Map<String, Integer> horario = new HashMap<>();
         horario.put("horas", horas);
@@ -97,6 +100,7 @@ public class Reloj extends JFrame implements Runnable {
         dibujarManecilla(g, centerX, centerY, horarioActual.get("minutos") * 6 - 90, 120, Color.BLUE);
         dibujarManecilla(g, centerX, centerY, horarioActual.get("segundos") * 6 - 90, 140, Color.RED);
     }
+
     private void dibujarManecilla(Graphics g, int x, int y, double angulo, int longitud, Color color) {
         int x2 = x + (int) (longitud * Math.cos(Math.toRadians(angulo)));
         int y2 = y + (int) (longitud * Math.sin(Math.toRadians(angulo)));

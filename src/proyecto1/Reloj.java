@@ -29,9 +29,10 @@ public class Reloj extends JFrame implements Runnable {
         int centerX = getWidth() / 2;
         int centerY = getHeight() / 2;
 
-        g.setColor(Color.BLACK);
+        g.setColor(Color.WHITE);
         g.fillRect(0, 0, getWidth(), getHeight());
 
+        RelojFondo.dibujarFondo(g, centerX - 353, centerY - 350); // restar mitad de ancho y alto de imagen
         RelojFondo.dibujarMarcoReloj(g, centerX, centerY);
         RelojFondo.dibujarInteriorReloj(g, centerX, centerY);
         RelojFondo.dibujarHorasReloj(g, centerX, centerY);
@@ -64,7 +65,7 @@ public class Reloj extends JFrame implements Runnable {
         horas = horaActual.getHour();
         minutos = horaActual.getMinute();
         segundos = horaActual.getSecond();
-        System.out.println("horas: " + horas + " minutos: " + minutos + " segundos: " + segundos);
+        //System.out.println("horas: " + horas + " minutos: " + minutos + " segundos: " + segundos);
     }
 
     private void dibujarManecillas(Graphics g) {
@@ -84,6 +85,9 @@ public class Reloj extends JFrame implements Runnable {
         int x2 = x + (int) (longitud * Math.cos(Math.toRadians(angulo)));
         int y2 = y + (int) (longitud * Math.sin(Math.toRadians(angulo)));
         g.setColor(color);
+
+        ((Graphics2D) g).setStroke(new BasicStroke(2));
+
         g.drawLine(x, y, x2, y2);
     }
 

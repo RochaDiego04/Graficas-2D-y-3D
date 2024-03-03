@@ -1,18 +1,33 @@
 package proyecto1;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class RelojFondo {
-    public static void dibujarMarcoReloj(Graphics g, int centerX, int centerY) {
-        g.setColor(new Color(53,20,20));
-        g.fillOval(centerX - 220, centerY - 220, 440, 440);
+    private static BufferedImage ruletaExterior;
+
+    static {
+        try {
+            ruletaExterior = ImageIO.read(RelojFondo.class.getResourceAsStream("ruleta_exterior.jpg"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
+    public static void dibujarFondo(Graphics g, int centerX, int centerY) {
+        g.drawImage(ruletaExterior, centerX, centerY, null);
+    }
+    public static void dibujarMarcoReloj(Graphics g, int centerX, int centerY) {
+        g.setColor(new Color(53,20,20));
+        g.fillOval(centerX - 210, centerY - 210, 420, 420);
+    }
     public static void dibujarInteriorReloj(Graphics g, int centerX, int centerY) {
         g.setColor(Color.WHITE);
         g.fillOval(centerX - 200, centerY - 200, 400, 400);
     }
-
     public static void dibujarHorasReloj(Graphics g, int centerX, int centerY){
         g.setColor(Color.BLACK);
         g.setFont(g.getFont().deriveFont(Font.BOLD, 24f));

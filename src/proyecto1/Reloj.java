@@ -49,7 +49,7 @@ public class Reloj extends JFrame implements Runnable {
 
             repaint();
             try {
-                Thread.sleep(20);
+                Thread.sleep(50);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

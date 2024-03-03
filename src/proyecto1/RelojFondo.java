@@ -11,7 +11,7 @@ public class RelojFondo {
 
     static {
         try {
-            ruletaExterior = ImageIO.read(RelojFondo.class.getResourceAsStream("ruleta_exterior.jpg"));
+            ruletaExterior = ImageIO.read(RelojFondo.class.getResourceAsStream("img/ruleta_exterior.jpg"));
         } catch (IOException e) {
             e.printStackTrace();
         }

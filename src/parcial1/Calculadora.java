@@ -46,7 +46,7 @@ public class Calculadora extends JFrame {
         panel.setLayout(new GridBagLayout());
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(5, 5, 2, 2);
 
         String[] labels = {
                 "C", "/", "*", "-",
@@ -69,7 +69,7 @@ public class Calculadora extends JFrame {
                 gbc.gridwidth = 1;
                 gbc.gridheight = 2;
                 gbc.fill = GridBagConstraints.VERTICAL;
-            } else {
+            } else { // Elementos que abarcan 1 espacio en el grid
                 gbc.gridwidth = 1;
                 gbc.gridheight = 1;
                 gbc.fill = GridBagConstraints.BOTH;

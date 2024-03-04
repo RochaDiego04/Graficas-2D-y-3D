@@ -8,6 +8,8 @@ import java.io.IOException;
 
 public class RelojFondo {
     private static BufferedImage ruletaExterior;
+    private static final Color COLOR_INTERIOR_RELOJ = new Color(255, 242, 211);
+    private static final Color COLOR_MARCO_RELOJ = new Color(53, 20, 20);
 
     static {
         try {
@@ -17,15 +19,15 @@ public class RelojFondo {
         }
     }
 
-    public static void dibujarFondo(Graphics g, int centerX, int centerY) {
+    public static void dibujarImagenFondo(Graphics g, int centerX, int centerY) {
         g.drawImage(ruletaExterior, centerX, centerY, null);
     }
     public static void dibujarMarcoReloj(Graphics g, int centerX, int centerY) {
-        g.setColor(new Color(53,20,20));
+        g.setColor(COLOR_MARCO_RELOJ);
         g.fillOval(centerX - 210, centerY - 210, 420, 420);
     }
     public static void dibujarInteriorReloj(Graphics g, int centerX, int centerY) {
-        g.setColor(Color.WHITE);
+        g.setColor(COLOR_INTERIOR_RELOJ);
         g.fillOval(centerX - 200, centerY - 200, 400, 400);
     }
     public static void dibujarHorasReloj(Graphics g, int centerX, int centerY){

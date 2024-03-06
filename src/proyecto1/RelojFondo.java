@@ -1,6 +1,10 @@
 package proyecto1;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class RelojFondo {
     private static Color colorFondoReloj = new Color(246, 229, 219);
@@ -9,7 +13,6 @@ public class RelojFondo {
     public static void dibujarMarcoReloj(Graphics g, int centerX, int centerY) {
         g.setColor(colorDetallesReloj);
         g.fillOval(centerX - 220, centerY - 220, 440, 440);
-    }
 
     public static void dibujarInteriorReloj(Graphics g, int centerX, int centerY) {
         g.setColor(colorFondoReloj);
@@ -43,7 +46,6 @@ public class RelojFondo {
             g.drawLine(x1, y1, x2, y2);
         }
     }
-
     public static void dibujarHorasReloj(Graphics g, int centerX, int centerY){
         g.setColor(Color.BLACK);
         g.setFont(g.getFont().deriveFont(Font.BOLD, 24f));

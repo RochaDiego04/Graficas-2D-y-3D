@@ -1,5 +1,6 @@
 package proyecto1;
 
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -11,6 +12,7 @@ import javax.swing.*;
 public class Reloj extends JFrame implements Runnable {
     private BufferedImage backgroundBufferImage;
     private BufferedImage foregroundBufferImage;
+
     private int horas;
     private int minutos;
     private int segundos;
@@ -25,7 +27,7 @@ public class Reloj extends JFrame implements Runnable {
         setTitle("Reloj análogo");
         setSize(800, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+
         setVisible(true);
         setResizable(false);
 
@@ -61,10 +63,10 @@ public class Reloj extends JFrame implements Runnable {
             // Actualizar manecillas en el buffer
             dibujarManecillas(g);
             g.dispose();
-
+            
             repaint();
             try {
-                Thread.sleep(40);
+              Thread.sleep(40);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -72,7 +74,6 @@ public class Reloj extends JFrame implements Runnable {
     }
 
     public void paint(Graphics g) {
-        // Dibujar fondo de reloj y manecillas en el JFrame
         g.drawImage(foregroundBufferImage, 0, 0, null);
     }
 
@@ -114,11 +115,16 @@ public class Reloj extends JFrame implements Runnable {
         dibujarManecilla(g, centerX, centerY, anguloHoras, 60, colorManecillaHoras);
         dibujarManecilla(g, centerX, centerY, anguloMinutos, 90, colorManecillaMinutos);
         dibujarManecilla(g, centerX, centerY, anguloSegundos, 140, colorManecillaSegundos);
+      
+        // circulo del centro
+        g.setColor(colorManecillaSegundos);
+        g.drawOval(centerX - 4, centerY - 4, 8, 8);
     }
 
     private void dibujarManecilla(Graphics g, int x, int y, double angulo, int longitud, Color color) {
         int x2 = x + (int) (longitud * Math.cos(Math.toRadians(angulo)));
         int y2 = y + (int) (longitud * Math.sin(Math.toRadians(angulo)));
+
         g.setColor(color);
         ((Graphics2D) g).setStroke(new BasicStroke(4)); // ancho de manecillas
         g.drawLine(x, y, x2, y2);

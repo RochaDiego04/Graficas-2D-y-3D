@@ -7,10 +7,11 @@ import javax.swing.*;
 
 public class Reloj extends JFrame implements Runnable {
     private BufferedImage backgroundBufferImage;
+    private BufferedImage foregroundBufferImage;
     private int horas;
     private int minutos;
     private int segundos;
-
+    private long tiempoInicialSegundo;
     public Reloj() {
         setTitle("Reloj análogo");
         setSize(800, 800);
@@ -20,17 +21,15 @@ public class Reloj extends JFrame implements Runnable {
         setResizable(false);
 
         backgroundBufferImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
+        foregroundBufferImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
 
         Thread hilo = new Thread(this);
         hilo.start();
     }
 
-    private void dibujarFondo(Graphics g) {
+    private void dibujarFondoReloj(Graphics g) {
         int centerX = getWidth() / 2;
         int centerY = getHeight() / 2;
-
-        g.setColor(Color.BLACK);
-        g.fillRect(0, 0, getWidth(), getHeight());
 
         RelojFondo.dibujarMarcoReloj(g, centerX, centerY);
         RelojFondo.dibujarInteriorReloj(g, centerX, centerY);
@@ -42,7 +41,11 @@ public class Reloj extends JFrame implements Runnable {
             obtenerHorarioDelSistema();
 
             Graphics g = backgroundBufferImage.getGraphics();
-            dibujarFondo(g);
+            dibujarFondoReloj(g);
+            g.dispose();
+
+            g = foregroundBufferImage.getGraphics();
+            g.drawImage(backgroundBufferImage, 0, 0, null);
             dibujarManecillas(g);
             g.dispose();
 
@@ -56,14 +59,18 @@ public class Reloj extends JFrame implements Runnable {
     }
 
     public void paint(Graphics g) {
-        g.drawImage(backgroundBufferImage, 0, 0, null);
+        g.drawImage(foregroundBufferImage, 0, 0, null);
     }
 
     private void obtenerHorarioDelSistema() {
         LocalTime horaActual = LocalTime.now();
+        int segundosAnteriores = segundos;
         horas = horaActual.getHour();
         minutos = horaActual.getMinute();
         segundos = horaActual.getSecond();
+        if (segundos != segundosAnteriores) {
+            tiempoInicialSegundo = System.nanoTime();
+        }
         System.out.println("horas: " + horas + " minutos: " + minutos + " segundos: " + segundos);
     }
 
@@ -71,9 +78,10 @@ public class Reloj extends JFrame implements Runnable {
         int centerX = getWidth() / 2;
         int centerY = getHeight() / 2;
 
+        double fraccionSegundo = (System.nanoTime() - tiempoInicialSegundo) / 1_000_000_000.0;
         double anguloHoras = (360.0 / 12) * ((horas % 12) + minutos / 60.0) - 90;
-        double anguloMinutos = (360.0 / 60) * (minutos + segundos / 60.0) - 90;
-        double anguloSegundos = (360.0 / 60) * (segundos + (double) System.currentTimeMillis() % 1000 / 1000) - 90;
+        double anguloMinutos = (360.0 / 60) * (minutos + (segundos + fraccionSegundo) / 60.0) - 90;
+        double anguloSegundos = (360.0 / 60) * (segundos + fraccionSegundo) - 90;
 
         dibujarManecilla(g, centerX, centerY, anguloHoras, 50, Color.BLACK);
         dibujarManecilla(g, centerX, centerY, anguloMinutos, 80, Color.BLUE);

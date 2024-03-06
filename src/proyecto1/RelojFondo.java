@@ -7,28 +7,44 @@ import java.io.File;
 import java.io.IOException;
 
 public class RelojFondo {
-    private static BufferedImage ruletaExterior;
-    private static final Color COLOR_INTERIOR_RELOJ = new Color(255, 242, 211);
-    private static final Color COLOR_MARCO_RELOJ = new Color(53, 20, 20);
+    private static Color colorFondoReloj = new Color(246, 229, 219);
+    private static Color colorDetallesReloj = new Color(53,20,20);
 
-    static {
-        try {
-            ruletaExterior = ImageIO.read(RelojFondo.class.getResourceAsStream("img/ruleta_exterior.jpg"));
-        } catch (IOException e) {
-            e.printStackTrace();
+    public static void dibujarMarcoReloj(Graphics g, int centerX, int centerY) {
+        g.setColor(colorDetallesReloj);
+        g.fillOval(centerX - 220, centerY - 220, 440, 440);
+
+    public static void dibujarInteriorReloj(Graphics g, int centerX, int centerY) {
+        g.setColor(colorFondoReloj);
+        g.fillOval(centerX - 200, centerY - 200, 400, 400);
+    }
+
+    public static void dibujarLineasInteriorReloj(Graphics g, int centerX, int centerY) {
+        g.setColor(colorDetallesReloj);
+        for (int i = 0; i < 12; i++) {
+            double angle = Math.toRadians(i * 30); // Calcular el ángulo para cada hora (en radianes)
+            int x1 = (int) (centerX + 180 * Math.cos(angle)); // Calcular la posición X del inicio de la línea
+            int y1 = (int) (centerY + 180 * Math.sin(angle)); // Calcular la posición Y del inicio de la línea
+            int x2 = (int) (centerX + 200 * Math.cos(angle)); // Calcular la posición X del final de la línea
+            int y2 = (int) (centerY + 200 * Math.sin(angle)); // Calcular la posición Y del final de la línea
+
+            ((Graphics2D) g).setStroke(new BasicStroke(4));
+            g.drawLine(x1, y1, x2, y2);
         }
     }
 
-    public static void dibujarImagenFondo(Graphics g, int centerX, int centerY) {
-        g.drawImage(ruletaExterior, centerX, centerY, null);
-    }
-    public static void dibujarMarcoReloj(Graphics g, int centerX, int centerY) {
-        g.setColor(COLOR_MARCO_RELOJ);
-        g.fillOval(centerX - 210, centerY - 210, 420, 420);
-    }
-    public static void dibujarInteriorReloj(Graphics g, int centerX, int centerY) {
-        g.setColor(COLOR_INTERIOR_RELOJ);
-        g.fillOval(centerX - 200, centerY - 200, 400, 400);
+    public static void dibujarLineasDelgadasInteriorReloj(Graphics g, int centerX, int centerY) {
+        g.setColor(colorDetallesReloj);
+        for (int i = 0; i < 60; i++) {
+            double angle = Math.toRadians(i * 6); // Calcular el ángulo para cada minuto (en radianes)
+            int x1 = (int) (centerX + 192 * Math.cos(angle)); // Calcular la posición X del inicio de la línea
+            int y1 = (int) (centerY + 192 * Math.sin(angle)); // Calcular la posición Y del inicio de la línea
+            int x2 = (int) (centerX + 197 * Math.cos(angle)); // Calcular la posición X del final de la línea
+            int y2 = (int) (centerY + 197 * Math.sin(angle)); // Calcular la posición Y del final de la línea
+
+            ((Graphics2D) g).setStroke(new BasicStroke(2));
+            g.drawLine(x1, y1, x2, y2);
+        }
     }
     public static void dibujarHorasReloj(Graphics g, int centerX, int centerY){
         g.setColor(Color.BLACK);

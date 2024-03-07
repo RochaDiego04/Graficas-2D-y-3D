@@ -34,7 +34,7 @@ public class Reloj extends JFrame implements Runnable {
         backgroundBufferImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
         foregroundBufferImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
 
-        File file = new File("src/proyecto1/img/bgImage.jpg");
+        File file = new File("src/proyecto1/img/bgImage.jpeg");
         if (file.exists()) {
             backgroundImage = ImageIO.read(file);
         } else {
@@ -82,7 +82,7 @@ public class Reloj extends JFrame implements Runnable {
         int centerY = getHeight() / 2;
 
         // Dibujar la imagen de fondo
-        g.drawImage(backgroundImage, 0, 0, 800, 800, null);
+        g.drawImage(backgroundImage, 0, -7, 800, 800, null);
 
         RelojFondo.dibujarMarcoReloj(g, centerX, centerY);
         RelojFondo.dibujarInteriorReloj(g, centerX, centerY);
@@ -112,9 +112,9 @@ public class Reloj extends JFrame implements Runnable {
         double anguloMinutos = (360.0 / 60) * (minutos + (segundos + fraccionSegundo) / 60.0) - 90;
         double anguloSegundos = (360.0 / 60) * (segundos + fraccionSegundo) - 90;
 
-        dibujarManecilla(g, centerX, centerY, anguloHoras, 60, colorManecillaHoras);
-        dibujarManecilla(g, centerX, centerY, anguloMinutos, 90, colorManecillaMinutos);
-        dibujarManecilla(g, centerX, centerY, anguloSegundos, 140, colorManecillaSegundos);
+        dibujarManecilla(g, centerX, centerY, anguloHoras, 35, colorManecillaHoras);
+        dibujarManecilla(g, centerX, centerY, anguloMinutos, 60, colorManecillaMinutos);
+        dibujarManecilla(g, centerX, centerY, anguloSegundos, 90, colorManecillaSegundos);
       
         // circulo del centro
         g.setColor(colorManecillaSegundos);

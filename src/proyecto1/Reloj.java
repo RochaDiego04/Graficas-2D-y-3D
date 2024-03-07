@@ -7,11 +7,13 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalTime;
 import javax.imageio.ImageIO;
+import javax.sound.sampled.*;
 import javax.swing.*;
 
 public class Reloj extends JFrame implements Runnable {
     private BufferedImage backgroundBufferImage;
     private BufferedImage foregroundBufferImage;
+    private Clip clockSound;
 
     private int horas;
     private int minutos;
@@ -34,11 +36,22 @@ public class Reloj extends JFrame implements Runnable {
         backgroundBufferImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
         foregroundBufferImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
 
+        // Cargar imagen de fondo
         File file = new File("src/proyecto1/img/bgImage.jpeg");
         if (file.exists()) {
             backgroundImage = ImageIO.read(file);
         } else {
             System.err.println("El archivo no existe: " + file.getAbsolutePath());
+        }
+
+        // Cargar sonido de fondo
+        try {
+            AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("src/proyecto1/multimedia/tic-tac.wav"));
+            clockSound = AudioSystem.getClip();
+            clockSound.open(audioInputStream);
+            clockSound.loop(Clip.LOOP_CONTINUOUSLY);
+        } catch (UnsupportedAudioFileException | LineUnavailableException | IOException e) {
+            e.printStackTrace();
         }
 
         Thread hilo = new Thread(this);

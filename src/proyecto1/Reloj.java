@@ -32,6 +32,7 @@ public class Reloj extends JFrame implements Runnable {
 
         setVisible(true);
         setResizable(false);
+        setLocationRelativeTo(null);
 
         backgroundBufferImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
         foregroundBufferImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -113,7 +114,7 @@ public class Reloj extends JFrame implements Runnable {
         if (segundos != segundosAnteriores) {
             tiempoInicialSegundo = System.nanoTime();
         }
-        System.out.println("horas: " + horas + " minutos: " + minutos + " segundos: " + segundos);
+        //System.out.println("horas: " + horas + " minutos: " + minutos + " segundos: " + segundos);
     }
 
     private void dibujarManecillas(Graphics g) {

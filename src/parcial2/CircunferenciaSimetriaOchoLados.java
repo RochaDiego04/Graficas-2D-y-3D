@@ -1,18 +1,19 @@
-/* straight line with formula y = mx + b But better for bigger slopes */
+/* Circunference using 8 quarter algorithm*/
 
 package parcial2;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-public class LineaRectaMejorada extends JFrame {
+
+public class CircunferenciaSimetriaOchoLados extends JFrame {
     private BufferedImage buffer;
     public Graphics graPixel;
-    public LineaRectaMejorada() {
+    public CircunferenciaSimetriaOchoLados() {
         setSize(400, 400);
-        setTitle("Linea recta Mejorada");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("Circunferencia Simetría de 8 lados");
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         buffer = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
         graPixel = buffer.createGraphics();
@@ -28,22 +29,20 @@ public class LineaRectaMejorada extends JFrame {
         g.drawImage(buffer, 0, 0, this);
     }
 
-    public void drawLine(int x0, int x1, int y0, int y1) {
-        double m = (double) (y1 - y0) / (x1 - x0); // Slope of the line
-        double b = y0 - (m * x0); // y interception
-
-        if (Math.abs(m) <= 1) {
-            for (int x = x0; x <= x1; x++) {
-                int y = (int) Math.round(m * x + b);
-                putPixel(x, y, Color.RED);
-            }
-        } else {
-            for (int y = y0; y <= y1; y++) {
-                int x = (int) Math.round((y - b) / m);
-                putPixel(x, y, Color.RED);
-            }
+    public void drawCircumference(int centerX, int centerY, int radius) {
+        for (int x = 0; x <= radius; x++) {
+            int y = (int) Math.round(Math.sqrt(radius * radius - x * x));
+            putPixel(centerX + x, centerY + y, Color.RED);
+            putPixel(centerX - x, centerY + y, Color.RED);
+            putPixel(centerX + x, centerY - y, Color.RED);
+            putPixel(centerX - x, centerY - y, Color.RED);
+            putPixel(centerX + y, centerY + x, Color.RED);
+            putPixel(centerX - y, centerY + x, Color.RED);
+            putPixel(centerX + y, centerY - x, Color.RED);
+            putPixel(centerX - y, centerY - x, Color.RED);
         }
     }
+
 
     /*public void drawGrid() {
         // Vertical Lines
@@ -61,15 +60,15 @@ public class LineaRectaMejorada extends JFrame {
                 if (y < getHeight()) {
                     putPixel(x, y, Color.GRAY);
                 }
-            }
+            }s
         }
     }*/
 
     public static void main(String[] args) {
-        LineaRectaMejorada ventana = new LineaRectaMejorada();
+        CircunferenciaSimetriaOchoLados ventana = new CircunferenciaSimetriaOchoLados();
         ventana.setVisible(true);
         //ventana.drawGrid();
-        ventana.drawLine(50, 100, 20, 399);
+        ventana.drawCircumference(200, 200, 20);
     }
 
 }

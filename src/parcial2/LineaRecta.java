@@ -40,7 +40,7 @@ public class LineaRecta extends JFrame {
         }
     }
 
-    public void drawGrid() {
+    /*public void drawGrid() {
         // Vertical Lines
         for (int x = 0; x <= getWidth(); x += 10) {
             for (int y = 0; y < getHeight(); y++) {
@@ -58,13 +58,13 @@ public class LineaRecta extends JFrame {
                 }
             }
         }
-    }
+    }*/
 
     public static void main(String[] args) {
         LineaRecta ventana = new LineaRecta();
         ventana.setVisible(true);
-        ventana.drawGrid();
-        ventana.drawLine(100, 200, 100, 200);
+        //ventana.drawGrid();
+        ventana.drawLine(50, 100, 20, 399);
     }
 
 }

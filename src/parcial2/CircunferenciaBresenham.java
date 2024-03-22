@@ -1,4 +1,4 @@
-/* Circunference using polar coordinates*/
+/* Circunference using Bresenham algorithm */
 
 package parcial2;
 
@@ -6,12 +6,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class CincunferenciaMejorada extends JFrame {
+public class CircunferenciaBresenham extends JFrame {
     private BufferedImage buffer;
     public Graphics graPixel;
-    public CincunferenciaMejorada() {
+    public CircunferenciaBresenham() {
         setSize(400, 400);
-        setTitle("Circunferencia Coordenadas Polares");
+        setTitle("Circunferencia de Bresenham");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -29,13 +29,33 @@ public class CincunferenciaMejorada extends JFrame {
         g.drawImage(buffer, 0, 0, this);
     }
 
-    public void drawCircumference(int centerX, int centerY, int radius) {
-        double angleIncrement = 0.8 / radius; // Ajustar el incremento del ángulo según el radio
-        for (double theta = 0; theta <= 2 * Math.PI; theta += angleIncrement) {
-            int x = (int) Math.round(centerX + radius * Math.sin(theta));
-            int y = (int) Math.round(centerY + radius * Math.cos(theta));
-            putPixel(x, y, Color.RED);
+    public void drawBresenhamCircumference(int centerX, int centerY, int radius) {
+        int x = 0;
+        int y = radius;
+        int p = 3 - 2 * radius;
+
+        drawCirclePoints(centerX, centerY, x, y);
+
+        while (x <= y) {
+            x++;
+            if (p < 0) {
+                p += 4 * x + 6;
+            } else {
+                y--;
+                p += 4 * (x - y) + 10;
+            }
+            drawCirclePoints(centerX, centerY, x, y);
         }
+    }
+    private void drawCirclePoints(int centerX, int centerY, int x, int y) {
+        putPixel(centerX + x, centerY + y, Color.BLUE);
+        putPixel(centerX - x, centerY + y, Color.BLUE);
+        putPixel(centerX + x, centerY - y, Color.BLUE);
+        putPixel(centerX - x, centerY - y, Color.BLUE);
+        putPixel(centerX + y, centerY + x, Color.BLUE);
+        putPixel(centerX - y, centerY + x, Color.BLUE);
+        putPixel(centerX + y, centerY - x, Color.BLUE);
+        putPixel(centerX - y, centerY - x, Color.BLUE);
     }
 
     /*public void drawGrid() {
@@ -59,10 +79,10 @@ public class CincunferenciaMejorada extends JFrame {
     }*/
 
     public static void main(String[] args) {
-        CincunferenciaMejorada ventana = new CincunferenciaMejorada();
+        CircunferenciaBresenham ventana = new CircunferenciaBresenham();
         ventana.setVisible(true);
         //ventana.drawGrid();
-        ventana.drawCircumference(200, 200, 70);
+        ventana.drawBresenhamCircumference(200, 200, 150);
     }
 
 }

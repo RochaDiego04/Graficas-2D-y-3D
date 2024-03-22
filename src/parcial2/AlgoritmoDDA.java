@@ -1,4 +1,4 @@
-/* straight line with formula y = mx + b */
+/* DDA algorithm */
 
 package parcial2;
 
@@ -8,14 +8,14 @@ import java.awt.image.BufferedImage;
 
 import static java.lang.Math.round;
 
-public class LineaRecta extends JFrame {
+public class AlgoritmoDDA extends JFrame {
     private BufferedImage buffer;
     public Graphics graPixel;
-    public LineaRecta() {
+    public AlgoritmoDDA() {
         setSize(400, 400);
-        setTitle("Linea recta");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("Algoritmo DDA");
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         buffer = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
         graPixel = buffer.createGraphics();
@@ -31,16 +31,31 @@ public class LineaRecta extends JFrame {
         g.drawImage(buffer, 0, 0, this);
     }
 
-    public void drawLine(int x0, int x1, int y0, int y1) {
-        double m = (double) (y1 - y0) / (x1 - x0); // Slope of the line
-        double b = y0 - (m * x0); // y interception
-        for (int x = x0; x <= x1; x++) {
-            int y = (int) round(m * x + b);
-            putPixel(x, round(y), Color.RED    );
+    public void drawDDALine(int x0, int x1, int y0, int y1) {
+        int dx = x1 - x0;
+        int dy = y1 - y0;
+        int steps;
+
+        if (Math.abs(dx) > Math.abs(dy)) {
+            steps = Math.abs(dx);
+        } else {
+            steps = Math.abs(dy);
+        }
+
+        double xinc = (double) dx / steps;
+        double yinc = (double) dy / steps;
+
+        double x = x0;
+        double y = y0;
+
+        for (int k = 0; k <= steps; k++) {
+            putPixel((int) Math.round(x), (int) Math.round(y), Color.RED);
+            x += xinc;
+            y += yinc;
         }
     }
 
-    public void drawGrid() {
+    /*public void drawGrid() {
         // Vertical Lines
         for (int x = 0; x <= getWidth(); x += 10) {
             for (int y = 0; y < getHeight(); y++) {
@@ -58,13 +73,14 @@ public class LineaRecta extends JFrame {
                 }
             }
         }
-    }
+    }*/
 
     public static void main(String[] args) {
-        LineaRecta ventana = new LineaRecta();
+        AlgoritmoDDA ventana = new AlgoritmoDDA();
         ventana.setVisible(true);
-        ventana.drawGrid();
-        ventana.drawLine(100, 200, 100, 200);
+        //ventana.drawGrid();
+        ventana.drawDDALine(50, 380, 50, 300);
     }
 
 }
+

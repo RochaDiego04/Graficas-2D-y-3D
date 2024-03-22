@@ -1,19 +1,16 @@
-/* straight line with formula y = mx + b */
+/* straight line with formula y = mx + b But better for bigger slopes */
 
 package parcial2;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-
-import static java.lang.Math.round;
-
-public class LineaRecta extends JFrame {
+public class LineaRectaMejorada extends JFrame {
     private BufferedImage buffer;
     public Graphics graPixel;
-    public LineaRecta() {
+    public LineaRectaMejorada() {
         setSize(400, 400);
-        setTitle("Linea recta");
+        setTitle("Linea recta Mejorada");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -34,13 +31,21 @@ public class LineaRecta extends JFrame {
     public void drawLine(int x0, int x1, int y0, int y1) {
         double m = (double) (y1 - y0) / (x1 - x0); // Slope of the line
         double b = y0 - (m * x0); // y interception
-        for (int x = x0; x <= x1; x++) {
-            int y = (int) round(m * x + b);
-            putPixel(x, round(y), Color.RED    );
+
+        if (Math.abs(m) <= 1) {
+            for (int x = x0; x <= x1; x++) {
+                int y = (int) Math.round(m * x + b);
+                putPixel(x, y, Color.RED);
+            }
+        } else {
+            for (int y = y0; y <= y1; y++) {
+                int x = (int) Math.round((y - b) / m);
+                putPixel(x, y, Color.RED);
+            }
         }
     }
 
-    public void drawGrid() {
+    /*public void drawGrid() {
         // Vertical Lines
         for (int x = 0; x <= getWidth(); x += 10) {
             for (int y = 0; y < getHeight(); y++) {
@@ -58,13 +63,14 @@ public class LineaRecta extends JFrame {
                 }
             }
         }
-    }
+    }*/
 
     public static void main(String[] args) {
-        LineaRecta ventana = new LineaRecta();
+        LineaRectaMejorada ventana = new LineaRectaMejorada();
         ventana.setVisible(true);
-        ventana.drawGrid();
-        ventana.drawLine(100, 200, 100, 200);
+        //ventana.drawGrid();
+        ventana.drawLine(50, 380, 20, 399);
     }
 
 }
+

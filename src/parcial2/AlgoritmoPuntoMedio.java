@@ -1,4 +1,4 @@
-/* DDA algorithm to draw straight lines*/
+/* Midpoint algorithm to draw straight lines*/
 
 package parcial2;
 
@@ -6,14 +6,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-import static java.lang.Math.round;
-
-public class AlgoritmoDDA extends JFrame {
+public class AlgoritmoPuntoMedio extends JFrame {
     private BufferedImage buffer;
     public Graphics graPixel;
-    public AlgoritmoDDA() {
+    public AlgoritmoPuntoMedio() {
         setSize(400, 400);
-        setTitle("Algoritmo DDA");
+        setTitle("Algoritmo de punto medio");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -31,29 +29,29 @@ public class AlgoritmoDDA extends JFrame {
         g.drawImage(buffer, 0, 0, this);
     }
 
-    public void drawDDALine(int x0, int x1, int y0, int y1) {
+    public void drawMidpointLine(int x0, int y0, int x1, int y1) {
         int dx = x1 - x0;
         int dy = y1 - y0;
-        int steps;
+        int d = 2 * dy - dx;
+        int incrE = 2 * dy;
+        int incrNE = 2 * (dy - dx);
+        int x = x0, y = y0;
 
-        if (Math.abs(dx) > Math.abs(dy)) {
-            steps = Math.abs(dx);
-        } else {
-            steps = Math.abs(dy);
-        }
+        putPixel(x, y, Color.RED);
 
-        double xinc = (double) dx / steps;
-        double yinc = (double) dy / steps;
-
-        double x = x0;
-        double y = y0;
-
-        for (int k = 0; k <= steps; k++) {
-            putPixel((int) Math.round(x), (int) Math.round(y), Color.RED);
-            x += xinc;
-            y += yinc;
+        while (x < x1) {
+            if (d <= 0) {
+                d += incrE;
+                x++;
+            } else {
+                d += incrNE;
+                x++;
+                y++;
+            }
+            putPixel(x, y, Color.RED);
         }
     }
+
 
     /*public void drawGrid() {
         // Vertical Lines
@@ -71,15 +69,15 @@ public class AlgoritmoDDA extends JFrame {
                 if (y < getHeight()) {
                     putPixel(x, y, Color.GRAY);
                 }
-            }
+            }s
         }
     }*/
 
     public static void main(String[] args) {
-        AlgoritmoDDA ventana = new AlgoritmoDDA();
+        AlgoritmoPuntoMedio ventana = new AlgoritmoPuntoMedio();
         ventana.setVisible(true);
         //ventana.drawGrid();
-        ventana.drawDDALine(50, 380, 50, 300);
+        ventana.drawMidpointLine(50, 200, 200, 300);
     }
 
 }

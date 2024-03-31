@@ -78,10 +78,10 @@ public class RellenoInundacion extends JFrame {
         RellenoInundacion ventana = new RellenoInundacion();
         ventana.setVisible(true);
 
-        ventana.drawBresenhamLine(100, 350, 50, 50);
+        ventana.drawBresenhamLine(100, 350, 50, 150);
         ventana.drawBresenhamLine(100, 350, 200, 200);
         ventana.drawBresenhamLine(100, 100, 50, 200);
-        ventana.drawBresenhamLine(350, 350, 50, 200);
+        ventana.drawBresenhamLine(350, 350, 150, 200);
 
         ventana.floodFill(225, 125, Color.BLACK, Color.BLUE); // Para rellenar el rectángulo
     }

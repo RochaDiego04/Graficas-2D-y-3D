@@ -95,6 +95,7 @@ public class Rectangulos extends JFrame {
         ventana.setVisible(true);
         //ventana.drawGrid();
         ventana.drawRectangle(100, 200, 50, 350);
+        ventana.drawRectangle(150, 200, 300, 350);
     }
 
 }

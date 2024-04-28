@@ -24,7 +24,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     private int playerVx = 0; // Velocidad horizontal del jugador
     private final int MOVE_SPEED = 2; // Velocidad de movimiento
     private final int GRAVITY = 1; // Gravedad
-    private final int JUMP_SPEED = 10; // Velocidad de salto
+    private final int JUMP_SPEED = 12; // Velocidad de salto
     private boolean isClimbing = false;
 
     // Flags for movementBarrel
@@ -80,16 +80,17 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
         buffer = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
 
+
         ladders = new ArrayList<>();
-        ladders.add(new int[]{630, 100, 10, 70}); // Escalera corta 1
+        ladders.add(new int[]{610, 80, 20, 70}); // Escalera corta 1
         ladders.add(new int[]{230, 150, 20, 110}); // Escalera 2
         ladders.add(new int[]{630, 240, 20, 220}); // Escalera 3  x, y , width, height
 
         platforms = new ArrayList<>();
-        platforms.add(new int[]{0, 100, 700, 20});
-        platforms.add(new int[]{800, 170, 70, 20});
-        platforms.add(new int[]{0, 260, 700, 20});
-        platforms.add(new int[]{800, 460, 0, 20});
+        /*platforms.add(new int[]{0, 100, 700, 20}); // x, y, width, height
+        platforms.add(new int[]{800, 170, 70, 20}); // x, y, width, height
+        platforms.add(new int[]{0, 260, 700, 20}); // x, y, width, height
+        platforms.add(new int[]{800, 460, 0, 20}); // x, y, width, height*/
 
         playerX = 20;
         playerY = HEIGHT - 60;
@@ -113,7 +114,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             // Actualizacion de movimiento de barril
             logicMoveBarrel();
             logicMovePlayer();
-
+            System.out.println(playerState);
             repaint();
             try {
                 Thread.sleep(10);
@@ -149,10 +150,15 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         graPixel.fillRect(0, 0, WIDTH, HEIGHT);
 
         // Dibuja escenario
-        drawBresenhamLine(0, 700, 100, 100, Color.orange);
+        drawBresenhamLine(0, 700, 100, 100, Color.orange); // x0, x1, y0. y1
         drawBresenhamLine(800, 70, 170, 170, Color.orange);
         drawBresenhamLine(0, 700, 260, 260, Color.orange);
         drawBresenhamLine(800, 0, 460, 460, Color.orange);
+
+        platforms.add(new int[]{0, 100, 700, 20}); // x, y, width, height
+        platforms.add(new int[]{70, 170, 730, 20}); // x, y, width, height
+        platforms.add(new int[]{0, 260, 700, 20}); // x, y, width, height
+        platforms.add(new int[]{0, 460, 800, 20}); // x, y, width, height
 
         // Dibuja escalera corta 1
         drawBresenhamLine(630, 630, 100, 170, Color.blue);
@@ -347,9 +353,9 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             }
         } else {
             // Genera un nuevo barril un tiempo aleatorio despues de que el primero desaparezca
-            if (Math.random() < 0.01) {
+            /*if (Math.random() < 0.01) {
                 resetBarrel();
-            }
+            }*/
         }
     }
 
@@ -385,6 +391,27 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     public void logicMovePlayer() {
         // Actualización de la posición vertical del jugador
         playerY += playerVy;
+        boolean isColliding = false; // Variable para mantener el estado de colisión
+
+        // Comprobación de colisiones con las plataformas
+        if (playerVy > 0) { // Si el jugador está moviéndose hacia abajo
+            if (isCollidingWithPlatform(playerX, playerY + 1, 0) ||
+                    isCollidingWithPlatform(playerX, playerY + 1, 1) ||
+                    isCollidingWithPlatform(playerX, playerY + 1, 2) ||
+                    isCollidingWithPlatform(playerX, playerY + 1, 3)) {
+                // Detiene el movimiento vertical hacia abajo
+                playerVy = 0;
+            }
+        } else if (playerVy < 0) { // Si el jugador está moviéndose hacia arriba
+            if (isCollidingWithPlatform(playerX, playerY, 0) ||
+                    isCollidingWithPlatform(playerX, playerY, 1) ||
+                    isCollidingWithPlatform(playerX, playerY, 2) ||
+                    isCollidingWithPlatform(playerX, playerY, 3)) {
+                // Detiene el movimiento vertical hacia arriba
+                playerVy = 0;
+            }
+        }
+
         switch (playerState) {
             case SEVENTH_LINE:
                 if (playerY < HEIGHT - 60 && playerY > 260 - 20) {
@@ -397,17 +424,20 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
                 break;
             case FIFTH_LINE:
                 if (playerY < 260 - 20 && playerY > 170 - 20) { // Corregir la condición para aplicar la gravedad en la quinta línea
-                    System.out.println("Jugador en la segunda area");
+
                     playerVy += GRAVITY; // Aplica la gravedad si el jugador está en el aire
                 } else {
+                    //System.out.println("moviendose por quinta linea");
                     playerY = 260 - 20; // Asegura que el jugador no caiga más abajo de la quinta línea
                     playerVy = 0; // Detiene el movimiento hacia abajo
                 }
                 break;
             case THIRD_LINE:
                 if (playerY < 170 - 20 && playerY > 100 - 20) {
+                    //System.out.println("Jugador en la tercer area");
                     playerVy += GRAVITY; // Aplica la gravedad si el jugador está en el aire
                 } else {
+                    //System.out.println("moviendose por tercera linea");
                     playerY = 170 - 20; // Asegura que el jugador no caiga más abajo de la quinta línea
                     playerVy = 0; // Detiene el movimiento hacia abajo
                 }
@@ -422,25 +452,6 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
                 break;
             default:
                 break;
-        }
-
-        // Comprobación de colisiones con las plataformas
-        if (playerVy > 0) { // Si el jugador está moviéndose hacia abajo
-            if (isCollidingWithPlatformFirstLine(playerX, playerY + 1) ||
-                    isCollidingWithPlatformThirdLine(playerX, playerY + 1) ||
-                    isCollidingWithPlatformFifthLine(playerX, playerY + 1) ||
-                    isCollidingWithPlatformSeventhLine(playerX, playerY + 1)) {
-                // Detiene el movimiento vertical hacia abajo
-                playerVy = 0;
-            }
-        } else if (playerVy < 0) { // Si el jugador está moviéndose hacia arriba
-            if (isCollidingWithPlatformFirstLine(playerX, playerY) ||
-                    isCollidingWithPlatformThirdLine(playerX, playerY) ||
-                    isCollidingWithPlatformFifthLine(playerX, playerY) ||
-                    isCollidingWithPlatformSeventhLine(playerX, playerY)) {
-                // Detiene el movimiento vertical hacia arriba
-                playerVy = 0;
-            }
         }
 
         // Actualización de la posición horizontal del jugador
@@ -463,93 +474,29 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     }
 
     /* COLISIONES */
-    private boolean isCollidingWithPlatformFirstLine(int x, int y) {
-        int platformX = platforms.get(0)[0];
-        int platformY = platforms.get(0)[1];
-        int platformWidth = platforms.get(0)[2];
-        int platformHeight = platforms.get(0)[3];
+    private boolean isCollidingWithPlatform(int x, int y, int platformIndex) {
+        int platformX = platforms.get(platformIndex)[0];
+        int platformY = platforms.get(platformIndex)[1];
+        int platformWidth = platforms.get(platformIndex)[2];
+        int platformHeight = platforms.get(platformIndex)[3];
 
-        // Verifica si el jugador está dentro de los límites horizontales de la plataforma
+        // Check if the player is within the horizontal bounds of the platform
         if (x + 20 >= platformX && x <= platformX + platformWidth) {
-            // Verifica si el jugador está en contacto con la parte superior de la plataforma
+            // Check if the player is touching the top of the platform
             if (y + 20 >= platformY && y + 20 <= platformY + 5) {
-                System.out.println("Colisionando con primera línea");
-                playerState = PlayerState.FIRST_LINE;
-                return true; // El jugador está en contacto con la parte superior de la plataforma
+                System.out.println("Colliding with platform " + (platformIndex + 1));
+                playerState = PlayerState.values()[platformIndex];
+                System.out.println(playerState);
+                return true; // The player is touching the top of the platform
             }
-            // Verifica si el jugador está dentro de la parte inferior de la plataforma
+            // Check if the player is within the bottom of the platform
             else if (y + 20 >= platformY + platformHeight - 5 && y + 20 <= platformY + platformHeight) {
-                return false; // El jugador está en contacto con la parte inferior de la plataforma
+                return false; // The player is touching the bottom of the platform
             }
         }
-        return false; // El jugador no está en contacto con ninguna plataforma
+        return false; // The player is not touching any platform
     }
 
-    private boolean isCollidingWithPlatformThirdLine(int x, int y) {
-        int platformX = platforms.get(1)[0];
-        int platformY = platforms.get(1)[1];
-        int platformWidth = platforms.get(1)[2];
-        int platformHeight = platforms.get(1)[3];
-
-        // Verifica si el jugador está dentro de los límites horizontales de la plataforma
-        if (x + 20 >= platformX && x <= platformX + platformWidth) {
-            // Verifica si el jugador está en contacto con la parte superior de la plataforma
-            if (y + 20 >= platformY && y + 20 <= platformY + 5) {
-                System.out.println("Colisionando con tercera línea");
-                playerState = PlayerState.THIRD_LINE;
-                return true; // El jugador está en contacto con la parte superior de la plataforma
-            }
-            // Verifica si el jugador está dentro de la parte inferior de la plataforma
-            else if (y + 20 >= platformY + platformHeight - 5 && y + 20 <= platformY + platformHeight) {
-                return false; // El jugador está en contacto con la parte inferior de la plataforma
-            }
-        }
-        return false; // El jugador no está en contacto con ninguna plataforma
-    }
-
-    private boolean isCollidingWithPlatformFifthLine(int x, int y) {
-        int platformX = platforms.get(2)[0];
-        int platformY = platforms.get(2)[1];
-        int platformWidth = platforms.get(2)[2];
-        int platformHeight = platforms.get(2)[3];
-
-        // Verifica si el jugador está dentro de los límites horizontales de la plataforma
-        if (x + 20 >= platformX && x <= platformX + platformWidth) {
-            // Verifica si el jugador está en contacto con la parte superior de la plataforma
-            if (y + 20 >= platformY && y + 20 <= platformY + 5) {
-                System.out.println("Colisionando con quinta línea");
-                playerState = PlayerState.FIFTH_LINE;
-                return true; // El jugador está en contacto con la parte superior de la plataforma
-            }
-            // Verifica si el jugador está dentro de la parte inferior de la plataforma
-            else if (y + 20 >= platformY + platformHeight - 5 && y + 20 <= platformY + platformHeight) {
-                return false; // El jugador está en contacto con la parte inferior de la plataforma
-            }
-        }
-        return false; // El jugador no está en contacto con ninguna plataforma
-    }
-
-    private boolean isCollidingWithPlatformSeventhLine(int x, int y) {
-        int platformX = platforms.get(3)[0];
-        int platformY = platforms.get(3)[1];
-        int platformWidth = platforms.get(3)[2];
-        int platformHeight = platforms.get(3)[3];
-
-        // Verifica si el jugador está dentro de los límites horizontales de la plataforma
-        if (x + 20 >= platformX && x <= platformX + platformWidth) {
-            // Verifica si el jugador está en contacto con la parte superior de la plataforma
-            if (y + 20 >= platformY && y + 20 <= platformY + 5) {
-                System.out.println("Colisionando con septima línea");
-                playerState = PlayerState.SEVENTH_LINE;
-                return true; // El jugador está en contacto con la parte superior de la plataforma
-            }
-            // Verifica si el jugador está dentro de la parte inferior de la plataforma
-            else if (y + 20 >= platformY + platformHeight - 5 && y + 20 <= platformY + platformHeight) {
-                return false; // El jugador está en contacto con la parte inferior de la plataforma
-            }
-        }
-        return false; // El jugador no está en contacto con ninguna plataforma
-    }
 
     public static void main(String[] args) {
         DonkeyKongGameV2 donkeyKongGame = new DonkeyKongGameV2();

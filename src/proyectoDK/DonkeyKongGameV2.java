@@ -11,6 +11,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
     private static final int WIDTH = 800;
     private static final int HEIGHT = 500;
+
     // Platforms
     private ArrayList<int[]> platforms;
 
@@ -24,8 +25,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     private int playerVx = 0; // Velocidad horizontal del jugador
     private final int MOVE_SPEED = 2; // Velocidad de movimiento
     private final int GRAVITY = 1; // Gravedad
-    private final int JUMP_SPEED = 12; // Velocidad de salto
-    private boolean isClimbing = false;
+    private final int JUMP_SPEED = 10; // Velocidad de salto
 
     // Flags for movementBarrel
     private boolean reachedVerticalLine = false;
@@ -65,8 +65,8 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         SEVENTH_LINE
     }
 
-    private BarrelState barrelState = BarrelState.FIRST_LINE;
-    private PlayerState playerState = PlayerState.SEVENTH_LINE;
+    private BarrelState barrelState;
+    private PlayerState playerState;
 
     public DonkeyKongGameV2() {
         setTitle("Donkey Kong Game");
@@ -80,17 +80,19 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
         buffer = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
 
+        barrelState = BarrelState.FIRST_LINE;
+        playerState = PlayerState.SEVENTH_LINE;
 
         ladders = new ArrayList<>();
-        ladders.add(new int[]{610, 80, 20, 70}); // Escalera corta 1
+        ladders.add(new int[]{610, 60, 20, 110}); // Escalera 1
         ladders.add(new int[]{230, 150, 20, 110}); // Escalera 2
         ladders.add(new int[]{630, 240, 20, 220}); // Escalera 3  x, y , width, height
 
         platforms = new ArrayList<>();
-        /*platforms.add(new int[]{0, 100, 700, 20}); // x, y, width, height
-        platforms.add(new int[]{800, 170, 70, 20}); // x, y, width, height
+        platforms.add(new int[]{0, 80, 700, 20}); // x, y, width, height
+        platforms.add(new int[]{70, 170, 730, 20}); // x, y, width, height
         platforms.add(new int[]{0, 260, 700, 20}); // x, y, width, height
-        platforms.add(new int[]{800, 460, 0, 20}); // x, y, width, height*/
+        platforms.add(new int[]{0, 460, 800, 20}); // x, y, width, height
 
         playerX = 20;
         playerY = HEIGHT - 60;
@@ -114,7 +116,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             // Actualizacion de movimiento de barril
             logicMoveBarrel();
             logicMovePlayer();
-            System.out.println(playerState);
+
             repaint();
             try {
                 Thread.sleep(10);
@@ -150,24 +152,12 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         graPixel.fillRect(0, 0, WIDTH, HEIGHT);
 
         // Dibuja escenario
-        drawBresenhamLine(0, 700, 100, 100, Color.orange); // x0, x1, y0. y1
+        drawBresenhamLine(0, 700, 80, 80, Color.orange); // x0, x1, y0. y1
         drawBresenhamLine(800, 70, 170, 170, Color.orange);
         drawBresenhamLine(0, 700, 260, 260, Color.orange);
         drawBresenhamLine(800, 0, 460, 460, Color.orange);
 
-        platforms.add(new int[]{0, 100, 700, 20}); // x, y, width, height
-        platforms.add(new int[]{70, 170, 730, 20}); // x, y, width, height
-        platforms.add(new int[]{0, 260, 700, 20}); // x, y, width, height
-        platforms.add(new int[]{0, 460, 800, 20}); // x, y, width, height
-
-        // Dibuja escalera corta 1
-        drawBresenhamLine(630, 630, 100, 170, Color.blue);
-
-        // Dibuja escalera 2
-        drawBresenhamLine(250, 250, 170, 260, Color.blue);
-
-        // Dibuja escalera 3
-        drawBresenhamLine(650, 650, 260, 460, Color.blue);
+        dibujarEscaleras();
 
         // Dibuja al jugador
         drawRectangle(playerX, playerY, playerX + 20, playerY + 20, Color.white);
@@ -184,6 +174,36 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             g.drawImage(buffer, 0, 0, null);
             g.dispose();
         }
+    }
+
+    /****************** DIBUJOS COMPUESTOS *******************/
+    public void dibujarBandera() {
+
+    }
+
+    public void dibujarEscenario() {
+
+    }
+
+    public void dibujarEscaleras() {
+        // Dibuja escalera 1
+        drawBresenhamLine(630, 630, 80, 170, Color.blue);
+
+        // Dibuja escalera 2
+        //drawBresenhamLine(250, 250, 170, 260, Color.red);
+        drawLine(235, 235, 170, 260, 3, Color.cyan);
+        for (int i = 240; i <= 260; i++) {
+            drawLine(i, i, 170, 260, false , Color.cyan);
+        }
+        drawLine(265, 265, 170, 260, 3, Color.cyan);
+
+        // Dibuja escalera 3
+        // drawBresenhamLine(650, 650, 260, 460, Color.blue); Linea original
+        drawLine(635, 635, 260, 460, 3, Color.cyan);
+        for (int i = 640; i <= 660; i++) {
+            drawLine(i, i, 260, 460, false , Color.cyan);
+        }
+        drawLine(665, 665, 260, 460, 3, Color.cyan);
     }
 
     /****************** MOVIMIENTO DEL BARRIL *******************/
@@ -323,7 +343,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
     private void resetBarrel() {
         barrelX = 50;
-        barrelY = 80;
+        barrelY = 60;
         barrelVisible = true;
 
         reachedVerticalLine = false;
@@ -371,8 +391,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             playerVx = MOVE_SPEED;
         } else if (keyCode == KeyEvent.VK_UP && isOnLadder()) { // Si el jugador está en una escalera
             playerVy = -MOVE_SPEED; // Mueve al jugador hacia arriba
-            isClimbing = true;
-        } else if (keyCode == KeyEvent.VK_UP && (playerY == HEIGHT - 60 || playerY == 260 - 20 || playerY == 170 - 20 || playerY == 100 - 20)) { // Permite saltar si el jugador está en el suelo o en las plataformas
+        } else if (keyCode == KeyEvent.VK_UP && (playerY == HEIGHT - 60 || playerY == 260 - 20 || playerY == 170 - 20 || playerY == 80 - 20)) { // Permite saltar si el jugador está en el suelo o en las plataformas
             playerVy = -JUMP_SPEED; // Inicia un salto
         }
     }
@@ -433,7 +452,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
                 }
                 break;
             case THIRD_LINE:
-                if (playerY < 170 - 20 && playerY > 100 - 20) {
+                if (playerY < 170 - 20 && playerY > 80 - 20) {
                     //System.out.println("Jugador en la tercer area");
                     playerVy += GRAVITY; // Aplica la gravedad si el jugador está en el aire
                 } else {
@@ -443,10 +462,10 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
                 }
                 break;
             case FIRST_LINE:
-                if (playerY < 100 - 20) {
+                if (playerY < 80 - 20) {
                     playerVy += GRAVITY; // Aplica la gravedad si el jugador está en el aire
                 } else {
-                    playerY = 100 - 20; // Asegura que el jugador no caiga más abajo de la séptima línea
+                    playerY = 80 - 20; // Asegura que el jugador no caiga más abajo de la séptima línea
                     playerVy = 0; // Detiene el movimiento hacia abajo
                 }
                 break;
@@ -484,7 +503,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         if (x + 20 >= platformX && x <= platformX + platformWidth) {
             // Check if the player is touching the top of the platform
             if (y + 20 >= platformY && y + 20 <= platformY + 5) {
-                System.out.println("Colliding with platform " + (platformIndex + 1));
+                //System.out.println("Colliding with platform " + (platformIndex + 1));
                 playerState = PlayerState.values()[platformIndex];
                 System.out.println(playerState);
                 return true; // The player is touching the top of the platform
@@ -548,6 +567,73 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         drawBresenhamLine(x0, x1, y1, y1, color);
         drawBresenhamLine(x0, x0, y0, y1, color);
         drawBresenhamLine(x1, x1, y0, y1, color);
+    }
+
+    public void drawLine(int x0, int x1, int y0, int y1, boolean continuous, Color color) {
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
+        int err2;
+
+        int counter = 0;
+        int mask = 0b110000000000;
+        int maskLength = Integer.toBinaryString(mask).length();
+
+        while (x0 != x1 || y0 != y1) {
+            if (continuous || (mask & (1 << counter)) != 0) {
+                putPixel(x0, y0, color);
+            }
+
+            err2 = 2 * err;
+            if (err2 > -dy) {
+                err -= dy;
+                x0 += sx;
+            }
+            if (err2 < dx) {
+                err += dx;
+                y0 += sy;
+            }
+
+            counter = (counter + 1) % maskLength;
+        }
+    }
+
+    public void drawLine(int x0, int x1, int y0, int y1, int lineWidth, Color color) {
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
+        int err2;
+        int x = x0;
+        int y = y0;
+
+        while (true) {
+            // Draw the current point with the specified line width
+            drawPixelWithWidth(x, y, lineWidth, color);
+
+            // Check if we have reached the end point
+            if (x == x1 && y == y1) break;
+
+            // Calculate the next point
+            err2 = 2 * err;
+            if (err2 > -dy) {
+                err -= dy;
+                x += sx;
+            }
+            if (err2 < dx) {
+                err += dx;
+                y += sy;
+            }
+        }
+    }
+    private void drawPixelWithWidth(int x, int y, int lineWidth, Color color) {
+        for (int i = -(lineWidth / 2); i <= lineWidth / 2; i++) {
+            putPixel(x + i, y, color); // Vertical segments
+            putPixel(x, y + i, color); // Horizontal segments
+        }
     }
 
     /*public void floodFill(int x, int y, Color targetColor, Color fillColor) {

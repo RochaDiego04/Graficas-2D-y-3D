@@ -1,3 +1,5 @@
+package prueba;
+
 public class Location3D {
     public int pointX;
     public int pointY;

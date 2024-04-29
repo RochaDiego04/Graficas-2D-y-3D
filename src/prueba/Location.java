@@ -1,3 +1,5 @@
+package prueba;
+
 public class Location {
     public int pointX;
     public int pointY;

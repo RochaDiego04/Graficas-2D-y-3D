@@ -1,3 +1,5 @@
+package prueba;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.swing.*;

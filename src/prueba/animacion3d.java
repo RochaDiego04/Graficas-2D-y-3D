@@ -1,3 +1,5 @@
+package prueba;
+
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import javax.swing.*;
 import java.awt.*;

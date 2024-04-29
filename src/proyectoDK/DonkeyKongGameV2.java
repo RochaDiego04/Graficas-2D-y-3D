@@ -6,9 +6,17 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
+    // COLORES
+    public static final Color SKY1 = new Color(0, 18, 32);
+    public static final Color SKY2 = new Color(0, 21, 35);
+    public static final Color SKY3 = new Color(1, 24, 38);
+    public static final Color SKY4 = new Color(0, 31, 47);
 
+    // DIMENSIONES DE VENTANA
     private static final int WIDTH = 800;
     private static final int HEIGHT = 500;
 
@@ -25,7 +33,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     private int playerVx = 0; // Velocidad horizontal del jugador
     private final int MOVE_SPEED = 2; // Velocidad de movimiento
     private final int GRAVITY = 1; // Gravedad
-    private final int JUMP_SPEED = 10; // Velocidad de salto
+    private final int JUMP_SPEED = 10; // Velocidad desalto
 
     // Flags for movementBarrel
     private boolean reachedVerticalLine = false;
@@ -48,6 +56,12 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     private Graphics graPixel;
     private Graphics gEscenario;
 
+    // Definición de códigos de región para recorte de lineas
+    private static final int INSIDE = 0; // 0000
+    private static final int LEFT = 1;   // 0001
+    private static final int RIGHT = 2;  // 0010
+    private static final int BOTTOM = 4; // 0100
+    private static final int TOP = 8;    // 1000
 
 
     private enum BarrelState {
@@ -118,12 +132,14 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         gEscenario = bufferEscenario.getGraphics();
 
         dibujarEscenario(gEscenario);
-        dibujarEscaleras(gEscenario);
 
         while (isRunning) {
             // Actualizacion de movimiento de barril
             logicMoveBarrel();
+            // Actualizacion de movimiento de jugador
             logicMovePlayer();
+            // Verificar si el jugador alcanza la bandera
+            logicPlayerWins();
 
             repaint();
             try {
@@ -134,10 +150,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         }
     }
 
-    @Override
-    public void paint(Graphics graphics) {
-        update(graphics);
-    }
+
 
     @Override
     public void update(Graphics graphics) {
@@ -154,12 +167,17 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         graPixel.drawImage(bufferEscenario, 0, 0, null);
 
         // Dibuja al jugador
-        drawRectangle(graPixel,  playerX, playerY, playerX + 20, playerY + 20, Color.white);
+        int[] xPoints = {playerX, playerX + 20, playerX + 20, playerX};
+        int[] yPoints = {playerY, playerY, playerY + 20, playerY + 20};
+        fillPolygonScanLine(graPixel,xPoints, yPoints, Color.white);
+        drawRectangle(graPixel,  playerX, playerY, playerX + 20, playerY + 20, Color.red);
 
         // Dibuja el barril si está visible
         if (barrelVisible) {
-            //bufferGraphics.fillRect(barrelX, barrelY, 20, BARREL_HEIGHT);
-            drawRectangle(graPixel,barrelX, barrelY, barrelX + 20, barrelY + 20, Color.red);
+            int[] x2Points = {barrelX, barrelX + 20, barrelX + 20, barrelX};
+            int[] y2Points = {barrelY, barrelY, barrelY + 20, barrelY + 20};
+            fillPolygonScanLine(graPixel,x2Points, y2Points, Color.red);
+            drawRectangle(graPixel,barrelX, barrelY, barrelX + 20, barrelY + 20, Color.white);
         }
 
         // Dibuja el buffer en la pantalla
@@ -171,19 +189,104 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     }
 
     /****************** DIBUJOS COMPUESTOS *******************/
-    public void dibujarBandera() {
-
+    public void dibujarEscenario(Graphics gEscenario) {
+        //dibujarFondo(gEscenario);
+        dibujarBandera(gEscenario);
+        dibujarPlataformas(gEscenario);
+        dibujarEscaleras(gEscenario);
     }
 
-    public void dibujarEscenario(Graphics gEscenario) {
-        // Linea 1
+    public void dibujarFondo(Graphics gEscenario) {
+        // CIELO
+        int[] xPoints = {0, getWidth(), getWidth(), 0};
+        int[] yPoints = {30, 30, 150, 150};
+        fillPolygonScanLine(gEscenario,xPoints, yPoints, SKY1);
+
+        xPoints = new int[]{0, getWidth(), getWidth(), 0};
+        yPoints = new int[]{150, 150, 190, 190};
+        fillPolygonScanLine(gEscenario,xPoints, yPoints, SKY2);
+
+        xPoints = new int[]{0, getWidth(), getWidth(), 0};
+        yPoints = new int[]{190, 190, 215, 215};
+        fillPolygonScanLine(gEscenario,xPoints, yPoints, SKY3);
+
+        xPoints = new int[]{0, getWidth(), getWidth(), 0};
+        yPoints = new int[]{215, 215, 280, 280};
+        fillPolygonScanLine(gEscenario,xPoints, yPoints, SKY4);
+    }
+
+    public void dibujarBandera(Graphics gEscenario) {
+        drawBresenhamLine(gEscenario, 49, 49, 50, 80, Color.white);
+        drawRightTriangle(gEscenario, 50, 60, 60, 60, 50,50, Color.white);
+        //drawBresenhamCircumference(gEscenario, 50,50,10, Color.red);
+    }
+
+    public void dibujarPlataformas(Graphics gEscenario) {
+        // plataforma 1
+        int yStart = 80;
+        int yEnd = 90;
+        int startX = 0;
+        int endX = 10;
+        while (endX <= 700) {
+            drawBresenhamLine(gEscenario, startX, endX, yStart, yEnd, Color.orange);
+            drawBresenhamLine(gEscenario, endX, endX + 10, yEnd, yStart, Color.orange);
+
+            startX += 20;
+            endX += 20;
+        }
+
         drawBresenhamLine(gEscenario, 0, 700, 80, 80, Color.orange); // x0, x1, y0. y1
-        // Linea 3
+        drawBresenhamLine(gEscenario, 0, 700, 90, 90, Color.orange); // x0, x1, y0. y1
+
+        // plataforma 3
+        int yStart_Platform3 = 170;
+        int yEnd_Platform3 = 180;
+        int startX_Platform3 = 70; // Empieza desde x = 70
+        int endX_Platform3 = 80; // Termina en x = 80, ya que se incrementará en el bucle
+
+        while (endX_Platform3 <= 800) {
+            drawBresenhamLine(gEscenario, startX_Platform3, endX_Platform3, yStart_Platform3, yEnd_Platform3, Color.orange);
+            drawBresenhamLine(gEscenario, endX_Platform3, endX_Platform3 + 10, yEnd_Platform3, yStart_Platform3, Color.orange);
+
+            startX_Platform3 += 20;
+            endX_Platform3 += 20;
+        }
+
         drawBresenhamLine(gEscenario,800, 70, 170, 170, Color.orange);
-        // Linea 5
+        drawBresenhamLine(gEscenario,800, 70, 180, 180, Color.orange);
+
+        // plataforma 5
+        int yStart_Platform5 = 260;
+        int yEnd_Platform5 = 270;
+        int startX_Platform5 = 0;
+        int endX_Platform5 = 10;
+
+        while (endX_Platform5 <= 700) {
+            drawBresenhamLine(gEscenario, startX_Platform5, endX_Platform5, yStart_Platform5, yEnd_Platform5, Color.orange);
+            drawBresenhamLine(gEscenario, endX_Platform5, endX_Platform5 + 10, yEnd_Platform5, yStart_Platform5, Color.orange);
+
+            startX_Platform5 += 20;
+            endX_Platform5 += 20;
+        }
+
         drawBresenhamLine(gEscenario,0, 700, 260, 260, Color.orange);
-        // Linea 7
+        drawBresenhamLine(gEscenario,0, 700, 270, 270, Color.orange);
+
+        // plataforma 7
+        int yStart_Platform7 = 460;
+        int yEnd_Platform7 = 470;
+        int startX_Platform7 = 0;
+        int endX_Platform7 = 10;
+
+        while (endX_Platform7 <= 800) {
+            drawBresenhamLine(gEscenario, startX_Platform7, endX_Platform7, yStart_Platform7, yEnd_Platform7, Color.orange);
+            drawBresenhamLine(gEscenario, endX_Platform7, endX_Platform7 + 10, yEnd_Platform7, yStart_Platform7, Color.orange);
+
+            startX_Platform7 += 20;
+            endX_Platform7 += 20;
+        }
         drawBresenhamLine(gEscenario,800, 0, 460, 460, Color.orange);
+        drawBresenhamLine(gEscenario,800, 0, 470, 470, Color.orange);
     }
 
     public void dibujarEscaleras(Graphics gEscenario) {
@@ -348,7 +451,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     }
 
     private void resetBarrel() {
-        barrelX = 50;
+        barrelX = 120;
         barrelY = 60;
         barrelVisible = true;
 
@@ -498,6 +601,19 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         return false;
     }
 
+    public void logicPlayerWins() {
+// Comprueba si el jugador colisiona con la bandera
+        if (playerX + 20 >= 49 && playerX <= 60 && playerY + 20 >= 50 && playerY <= 60) {
+            // Colisión detectada
+            JOptionPane.showMessageDialog(this, "¡Has ganado! ¡Has alcanzado la bandera!");
+            System.exit(0);
+        }
+
+
+        drawBresenhamLine(gEscenario, 49, 49, 50, 80, Color.white);
+        drawRightTriangle(gEscenario, 50, 60, 60, 60, 50,50, Color.white);
+    }
+
     /* COLISIONES */
     private boolean isCollidingWithPlatform(int x, int y, int platformIndex) {
         int platformX = platforms.get(platformIndex)[0];
@@ -556,6 +672,78 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             }
         }
     }
+
+    public void drawBresenhamCutLine(Graphics g, int x0, int x1, int y0, int y1, int xLeft, int xRight, int yTop, int yBottom, Color color) {
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
+
+        while (true) {
+            int code0 = computeOutCode(x0, y0, xLeft, xRight, yTop, yBottom);
+            int code1 = computeOutCode(x1, y1, xLeft, xRight, yTop, yBottom);
+
+            if ((code0 | code1) == 0) { // Ambos puntos están dentro de la ventana
+                putPixel(g, x0, y0, color);
+                if (x0 == x1 && y0 == y1)
+                    break;
+                int e2 = 2 * err;
+                if (e2 > -dy) {
+                    err -= dy;
+                    x0 += sx;
+                }
+                if (e2 < dx) {
+                    err += dx;
+                    y0 += sy;
+                }
+            } else if ((code0 & code1) != 0) { // Ambos puntos están fuera de la ventana en la misma región
+                break;
+            } else {
+                int codeOut = (code0 != 0) ? code0 : code1;
+                int x, y;
+
+                if ((codeOut & TOP) != 0) {
+                    x = x0 + (x1 - x0) * (yTop - y0) / (y1 - y0);
+                    y = yTop;
+                } else if ((codeOut & BOTTOM) != 0) {
+                    x = x0 + (x1 - x0) * (yBottom - y0) / (y1 - y0);
+                    y = yBottom;
+                } else if ((codeOut & RIGHT) != 0) {
+                    y = y0 + (y1 - y0) * (xRight - x0) / (x1 - x0);
+                    x = xRight;
+                } else {
+                    y = y0 + (y1 - y0) * (xLeft - x0) / (x1 - x0);
+                    x = xLeft;
+                }
+
+                if (codeOut == code0) {
+                    x0 = x;
+                    y0 = y;
+                } else {
+                    x1 = x;
+                    y1 = y;
+                }
+            }
+        }
+    }
+
+    private int computeOutCode(int x, int y, int xLeft, int xRight, int yTop, int yBottom) {
+        int code = INSIDE;
+
+        if (x < xLeft)
+            code |= LEFT;
+        else if (x > xRight)
+            code |= RIGHT;
+
+        if (y < yTop)
+            code |= TOP;
+        else if (y > yBottom)
+            code |= BOTTOM;
+
+        return code;
+    }
+
     public void drawRectangle(Graphics g, int x0, int y0, int x1, int y1, Color color) {
         // If x0 has a greater value, exchange values with x1
         if (x0 > x1) {
@@ -573,6 +761,17 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         drawBresenhamLine(g, x0, x1, y1, y1, color);
         drawBresenhamLine(g, x0, x0, y0, y1, color);
         drawBresenhamLine(g, x1, x1, y0, y1, color);
+    }
+
+    public void drawRightTriangle(Graphics g, int x0, int y0, int x1, int y1, int x2, int y2, Color color) {
+        // Calcular el punto de la esquina superior derecha
+        int x3 = x0 + (x2 - x0);
+        int y3 = y1;
+
+        // Dibujar las tres líneas que forman el triángulo rectángulo
+        drawBresenhamLine(g, x0, x1, y0, y1, color);
+        drawBresenhamLine(g, x1, x2, y1, y2, color);
+        drawBresenhamLine(g, x0, x3, y0, y2, color);
     }
 
     public void drawLine(Graphics g, int x0, int x1, int y0, int y1, boolean continuous, Color color) {
@@ -642,7 +841,117 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         }
     }
 
-    /*public void floodFill(int x, int y, Color targetColor, Color fillColor) {
+    public void drawBresenhamCircumference(Graphics g, int centerX, int centerY, int radius, Color color) {
+        int x = 0;
+        int y = radius;
+        int p = 3 - 2 * radius;
+
+        drawCirclePoints(g, centerX, centerY, x, y, color);
+
+        while (x <= y) {
+            x++;
+            if (p < 0) {
+                p += 4 * x + 6;
+            } else {
+                y--;
+                p += 4 * (x - y) + 10;
+            }
+            drawCirclePoints(g, centerX, centerY, x, y, color);
+        }
+    }
+    private void drawCirclePoints(Graphics g, int centerX, int centerY, int x, int y, Color color) {
+        putPixel(g, centerX + x, centerY + y, color);
+        putPixel(g,centerX - x, centerY + y, color);
+        putPixel(g,centerX + x, centerY - y, color);
+        putPixel(g,centerX - x, centerY - y, color);
+        putPixel(g,centerX + y, centerY + x, color);
+        putPixel(g,centerX - y, centerY + x, color);
+        putPixel(g,centerX + y, centerY - x, color);
+        putPixel(g,centerX - y, centerY - x, color);
+    }
+
+    public void drawEllipse(Graphics g, int centerX, int centerY, int radiusMajor, int radiusMinor, Color color) {
+        int x = 0;
+        int y = radiusMinor;
+        int p1 = radiusMinor * radiusMinor - radiusMajor * radiusMajor * radiusMinor + radiusMajor * radiusMajor / 4;
+        int dx = 2 * radiusMinor * radiusMinor * x;
+        int dy = 2 * radiusMajor * radiusMajor * y;
+
+        drawEllipsePoints(g, centerX, centerY, x, y, color);
+
+        while (dx < dy) {
+            x++;
+            dx += 2 * radiusMinor * radiusMinor;
+            if (p1 < 0) {
+                p1 += dx + radiusMinor * radiusMinor;
+            } else {
+                y--;
+                dy -= 2 * radiusMajor * radiusMajor;
+                p1 += dx - dy + radiusMinor * radiusMinor;
+            }
+            drawEllipsePoints(g, centerX, centerY, x, y, color);
+        }
+
+        int p2 = (int) (radiusMinor * radiusMinor * (x + 0.5) * (x + 0.5) + radiusMajor * radiusMajor * (y - 1) * (y - 1) - radiusMajor * radiusMajor * radiusMinor * radiusMinor);
+
+        while (y >= 0) {
+            y--;
+            dy -= 2 * radiusMajor * radiusMajor;
+            if (p2 > 0) {
+                p2 += radiusMajor * radiusMajor - dy;
+            } else {
+                x++;
+                dx += 2 * radiusMinor * radiusMinor;
+                p2 += dx - dy + radiusMajor * radiusMajor;
+            }
+            drawEllipsePoints(g, centerX, centerY, x, y, color);
+        }
+    }
+
+    private void drawEllipsePoints(Graphics g, int centerX, int centerY, int x, int y, Color color) {
+        putPixel(g, centerX + x, centerY + y, color);
+        putPixel(g, centerX - x, centerY + y, color);
+        putPixel(g, centerX + x, centerY - y, color);
+        putPixel(g, centerX - x, centerY - y, color);
+    }
+
+    public void fillPolygonScanLine(Graphics g, int[] xPoints, int[] yPoints, Color color) {
+
+        // Calcular el punto mínimo en X,Y
+        int minY = Arrays.stream(yPoints).min().getAsInt();
+        int maxY = Arrays.stream(yPoints).max().getAsInt();
+
+        // Iterar en el eje vertical
+        for (int y = minY; y <= maxY; y++) {
+            List<Integer> intersections = new ArrayList<>();
+            for (int i = 0; i < xPoints.length; i++) {
+                int x1 = xPoints[i];
+                int y1 = yPoints[i];
+                int x2 = xPoints[(i + 1) % xPoints.length];
+                int y2 = yPoints[(i + 1) % yPoints.length];
+
+                if ((y1 <= y && y2 >= y) || (y2 <= y && y1 >= y)) {
+                    if (y1 != y2) {
+                        int x = x1 + (y - y1) * (x2 - x1) / (y2 - y1);
+                        intersections.add(x);
+                    } else if (y == y1 && ((y1 == minY && y2 != minY) || (y1 == maxY && y2 != maxY))) {
+                        intersections.add(x1);
+                    }
+                }
+            }
+
+            intersections.sort(Integer::compareTo);
+            for (int i = 0; i < intersections.size(); i += 2) {
+                int xStart = intersections.get(i);
+                int xEnd = intersections.get(i + 1);
+                for (int x = xStart; x <= xEnd; x++) {
+                    putPixel(g, x, y, color);
+                }
+            }
+        }
+    }
+
+    /*public void floodFill(Graphics g, int x, int y, Color targetColor, Color fillColor) {
         Queue<Point> queue = new ArrayDeque<>();
         queue.add(new Point(x, y));
 
@@ -653,7 +962,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
             if (px >= 0 && px < getWidth() && py >= 0 && py < getHeight() &&
                     bufferImage.getRGB(px, py) == targetColor.getRGB()) {
-                putPixel(px, py, fillColor);
+                putPixel(g, px, py, fillColor);
 
                 // Revisar los vecinos
                 queue.add(new Point(px + 1, py));

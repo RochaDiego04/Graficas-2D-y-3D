@@ -1,3 +1,5 @@
+package prueba;
+
 import java.awt.*;
 import java.util.ArrayList;
 
@@ -29,7 +31,7 @@ public class Figures {
         return destinationPoints;
     }
 
-    public ArrayList<Location> lineDDA(Location pointA,Location pointB){
+    public ArrayList<Location> lineDDA(Location pointA, Location pointB){
         ArrayList<Location> destinationPoints = new ArrayList<>();
         int dx = pointB.pointX - pointA.pointX;
         int dy = pointB.pointY - pointA.pointY;
@@ -64,7 +66,7 @@ public class Figures {
         return destinationPoints;
     }
 
-    public ArrayList<Location> bresenham(Location pointA,Location pointB){
+    public ArrayList<Location> bresenham(Location pointA, Location pointB){
         int x, y, dx, dy, p, incE, incNE, stepx, stepy,x0,y0,x1,y1;
         ArrayList<Location> destinationPoints = new ArrayList<>();
         x0=pointA.pointX;
@@ -127,7 +129,7 @@ public class Figures {
         return destinationPoints;
     }
 
-    public  ArrayList<Location> middlePoint(Location pointA,Location pointB){
+    public  ArrayList<Location> middlePoint(Location pointA, Location pointB){
         int x0 = pointA.pointX;
         int y0 = pointA.pointY;
         int x1 = pointB.pointX;
@@ -234,7 +236,7 @@ public class Figures {
         this.arrayCircules.add(new Location(centerX - y, centerY - x));
     }
 
-    public ArrayList<Location> elipse(Location points,int radiusX,int radiusY){
+    public ArrayList<Location> elipse(Location points, int radiusX, int radiusY){
         ArrayList<Location> destinationPoints = new ArrayList<>();
 
         for (double i = 0; i < 360; i +=.1) {

@@ -26,6 +26,15 @@ public class Pixel extends JFrame {
         g.drawImage(buffer, 0, 0, this);
     }
 
+    /*public void putPixel(int x, int y,Color c){
+        buffer.setRGB(0,0,c.getRGB());
+        this.getGraphics().drawImage(buffer,x,y,this);
+    }
+    public void paint(Graphics g){
+        super.paint(g);
+        putPixel(100,100,g.getColor());
+    }*/
+
     public static void main(String[] args) {
         Pixel pixel = new Pixel();
         pixel.setVisible(true);

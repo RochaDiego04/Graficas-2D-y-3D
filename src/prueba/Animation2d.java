@@ -1,3 +1,5 @@
+package prueba;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -114,7 +116,7 @@ public class Animation2d extends JFrame implements Runnable {
             this.scene1();
         graphics.drawImage(buffer, 0, 0, this);
     }
-    private void pointsLocations(ArrayList<Location> locations,Color color){
+    private void pointsLocations(ArrayList<Location> locations, Color color){
         int[][] trianglePoints = new int[locations.size()][2];
         for (int i = 0; i < locations.size(); i++) {
             trianglePoints[i][0] = locations.get(i).pointX;
@@ -779,7 +781,7 @@ public class Animation2d extends JFrame implements Runnable {
             drawPoints(locations,Color.BLUE);
         }
     }
-    public void drawPoints(ArrayList<Location> locations,Color color) {
+    public void drawPoints(ArrayList<Location> locations, Color color) {
         for (Location point : locations) {
             putPixel(point.pointX, point.pointY,color);
         }

@@ -35,17 +35,19 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     private boolean reachedSixthVerticalLine = false;
     private boolean reachedSeventhhLine = false;
     private int BARREL_HEIGHT = 20;
-    private final int BARREL_MOVE_SPEED = 1; // Velocidad de movimiento
+    private final int BARREL_MOVE_SPEED = 3; // Velocidad de movimiento
     private int barrelX;
     private int barrelY;
     private boolean barrelVisible;
 
     // THREAD AND BUFFER
     private boolean isRunning;
-    private Image fondo;
     private BufferedImage bufferImage;
     private Image buffer;
+    private Image bufferEscenario;
     private Graphics graPixel;
+    private Graphics gEscenario;
+
 
 
     private enum BarrelState {
@@ -78,8 +80,6 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
         addKeyListener(this);
 
-        buffer = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
-
         barrelState = BarrelState.FIRST_LINE;
         playerState = PlayerState.SEVENTH_LINE;
 
@@ -102,16 +102,24 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         barrelVisible = false;
 
         isRunning = true;
-        bufferImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+        bufferImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 
-        buffer = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
+        buffer = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
         graPixel = buffer.getGraphics(); // Inicializa graPixel aquí
+
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setVisible(true);
     }
 
     public void run() {
+        // Dibujar buffer con imagen de fondo
+        bufferEscenario = createImage(getWidth(), getHeight());
+        gEscenario = bufferEscenario.getGraphics();
+
+        dibujarEscenario(gEscenario);
+        dibujarEscaleras(gEscenario);
+
         while (isRunning) {
             // Actualizacion de movimiento de barril
             logicMoveBarrel();
@@ -128,11 +136,6 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
     @Override
     public void paint(Graphics graphics) {
-        if (fondo == null) {
-            fondo = createImage(getWidth(), getHeight());
-            Graphics gfondo = fondo.getGraphics();
-            gfondo.setClip(0, 0, getWidth(), getHeight());
-        }
         update(graphics);
     }
 
@@ -147,25 +150,16 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
     @Override
     public void repaint() {
-        // Llena el buffer con el color negro
-        graPixel.setColor(Color.BLACK);
-        graPixel.fillRect(0, 0, WIDTH, HEIGHT);
-
-        // Dibuja escenario
-        drawBresenhamLine(0, 700, 80, 80, Color.orange); // x0, x1, y0. y1
-        drawBresenhamLine(800, 70, 170, 170, Color.orange);
-        drawBresenhamLine(0, 700, 260, 260, Color.orange);
-        drawBresenhamLine(800, 0, 460, 460, Color.orange);
-
-        dibujarEscaleras();
+        // Dibuja buffer del fondo con el escenario
+        graPixel.drawImage(bufferEscenario, 0, 0, null);
 
         // Dibuja al jugador
-        drawRectangle(playerX, playerY, playerX + 20, playerY + 20, Color.white);
+        drawRectangle(graPixel,  playerX, playerY, playerX + 20, playerY + 20, Color.white);
 
         // Dibuja el barril si está visible
         if (barrelVisible) {
             //bufferGraphics.fillRect(barrelX, barrelY, 20, BARREL_HEIGHT);
-            drawRectangle(barrelX, barrelY, barrelX + 20, barrelY + 20, Color.red);
+            drawRectangle(graPixel,barrelX, barrelY, barrelX + 20, barrelY + 20, Color.red);
         }
 
         // Dibuja el buffer en la pantalla
@@ -181,29 +175,41 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
     }
 
-    public void dibujarEscenario() {
-
+    public void dibujarEscenario(Graphics gEscenario) {
+        // Linea 1
+        drawBresenhamLine(gEscenario, 0, 700, 80, 80, Color.orange); // x0, x1, y0. y1
+        // Linea 3
+        drawBresenhamLine(gEscenario,800, 70, 170, 170, Color.orange);
+        // Linea 5
+        drawBresenhamLine(gEscenario,0, 700, 260, 260, Color.orange);
+        // Linea 7
+        drawBresenhamLine(gEscenario,800, 0, 460, 460, Color.orange);
     }
 
-    public void dibujarEscaleras() {
+    public void dibujarEscaleras(Graphics gEscenario) {
         // Dibuja escalera 1
-        drawBresenhamLine(630, 630, 80, 170, Color.blue);
+        //drawBresenhamLine(630, 630, 80, 170, Color.blue);
+        drawLine(gEscenario,615, 615, 80, 170, 3, Color.cyan);
+        for (int i = 620; i <= 640; i++) {
+            drawLine(gEscenario,i, i, 80, 170, false , Color.cyan);
+        }
+        drawLine(gEscenario,645, 645, 80, 170, 3, Color.cyan);
 
         // Dibuja escalera 2
         //drawBresenhamLine(250, 250, 170, 260, Color.red);
-        drawLine(235, 235, 170, 260, 3, Color.cyan);
+        drawLine(gEscenario,235, 235, 170, 260, 3, Color.cyan);
         for (int i = 240; i <= 260; i++) {
-            drawLine(i, i, 170, 260, false , Color.cyan);
+            drawLine(gEscenario,i, i, 170, 260, false , Color.cyan);
         }
-        drawLine(265, 265, 170, 260, 3, Color.cyan);
+        drawLine(gEscenario,265, 265, 170, 260, 3, Color.cyan);
 
         // Dibuja escalera 3
         // drawBresenhamLine(650, 650, 260, 460, Color.blue); Linea original
-        drawLine(635, 635, 260, 460, 3, Color.cyan);
+        drawLine(gEscenario,635, 635, 260, 460, 3, Color.cyan);
         for (int i = 640; i <= 660; i++) {
-            drawLine(i, i, 260, 460, false , Color.cyan);
+            drawLine(gEscenario,i, i, 260, 460, false , Color.cyan);
         }
-        drawLine(665, 665, 260, 460, 3, Color.cyan);
+        drawLine(gEscenario,665, 665, 260, 460, 3, Color.cyan);
     }
 
     /****************** MOVIMIENTO DEL BARRIL *******************/
@@ -373,9 +379,9 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             }
         } else {
             // Genera un nuevo barril un tiempo aleatorio despues de que el primero desaparezca
-            /*if (Math.random() < 0.01) {
+            if (Math.random() < 0.01) {
                 resetBarrel();
-            }*/
+            }
         }
     }
 
@@ -525,11 +531,11 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
 
     /****************** METODOS DE DIBUJO *******************/
-    private void putPixel(int x, int y, Color color) {
+    private void putPixel(Graphics g, int x, int y, Color color) {
         bufferImage.setRGB(0, 0, color.getRGB());
-        graPixel.drawImage(bufferImage, x, y, this);
+        g.drawImage(bufferImage, x, y, this);
     }
-    public void drawBresenhamLine(int x0, int x1, int y0, int y1, Color color) {
+    public void drawBresenhamLine(Graphics g, int x0, int x1, int y0, int y1, Color color) {
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
@@ -538,7 +544,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         int err2;
 
         while (x0 != x1 || y0 != y1) {
-            putPixel(x0, y0, color);
+            putPixel(g, x0, y0, color);
             err2 = 2 * err;
             if (err2 > -dy) {
                 err -= dy;
@@ -550,7 +556,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             }
         }
     }
-    public void drawRectangle(int x0, int y0, int x1, int y1, Color color) {
+    public void drawRectangle(Graphics g, int x0, int y0, int x1, int y1, Color color) {
         // If x0 has a greater value, exchange values with x1
         if (x0 > x1) {
             int temp = x0;
@@ -563,13 +569,13 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             y1 = temp;
         }
 
-        drawBresenhamLine(x0, x1, y0, y0, color);
-        drawBresenhamLine(x0, x1, y1, y1, color);
-        drawBresenhamLine(x0, x0, y0, y1, color);
-        drawBresenhamLine(x1, x1, y0, y1, color);
+        drawBresenhamLine(g, x0, x1, y0, y0, color);
+        drawBresenhamLine(g, x0, x1, y1, y1, color);
+        drawBresenhamLine(g, x0, x0, y0, y1, color);
+        drawBresenhamLine(g, x1, x1, y0, y1, color);
     }
 
-    public void drawLine(int x0, int x1, int y0, int y1, boolean continuous, Color color) {
+    public void drawLine(Graphics g, int x0, int x1, int y0, int y1, boolean continuous, Color color) {
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
@@ -583,7 +589,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
         while (x0 != x1 || y0 != y1) {
             if (continuous || (mask & (1 << counter)) != 0) {
-                putPixel(x0, y0, color);
+                putPixel(g, x0, y0, color);
             }
 
             err2 = 2 * err;
@@ -600,7 +606,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         }
     }
 
-    public void drawLine(int x0, int x1, int y0, int y1, int lineWidth, Color color) {
+    public void drawLine(Graphics g, int x0, int x1, int y0, int y1, int lineWidth, Color color) {
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
@@ -612,7 +618,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
         while (true) {
             // Draw the current point with the specified line width
-            drawPixelWithWidth(x, y, lineWidth, color);
+            drawPixelWithWidth(g, x, y, lineWidth, color);
 
             // Check if we have reached the end point
             if (x == x1 && y == y1) break;
@@ -629,10 +635,10 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             }
         }
     }
-    private void drawPixelWithWidth(int x, int y, int lineWidth, Color color) {
+    private void drawPixelWithWidth(Graphics g, int x, int y, int lineWidth, Color color) {
         for (int i = -(lineWidth / 2); i <= lineWidth / 2; i++) {
-            putPixel(x + i, y, color); // Vertical segments
-            putPixel(x, y + i, color); // Horizontal segments
+            putPixel(g, x + i, y, color); // Vertical segments
+            putPixel(g, x, y + i, color); // Horizontal segments
         }
     }
 

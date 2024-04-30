@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.*;
 
 public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     // COLORES
@@ -35,18 +36,9 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     private final int GRAVITY = 1; // Gravedad
     private final int JUMP_SPEED = 10; // Velocidad desalto
 
-    // Flags for movementBarrel
-    private boolean reachedVerticalLine = false;
-    private boolean reachedThirdLine = false;
-    private boolean reachedSecondVerticalLine = false;
-    private boolean reachedFifthLine = false;
-    private boolean reachedSixthVerticalLine = false;
-    private boolean reachedSeventhhLine = false;
-    private int BARREL_HEIGHT = 20;
-    private final int BARREL_MOVE_SPEED = 3; // Velocidad de movimiento
-    private int barrelX;
-    private int barrelY;
-    private boolean barrelVisible;
+    // Barrel
+    private List<Barrel> barrels;
+    int NUMBER_BARRELS = 4;
 
     // THREAD AND BUFFER
     private boolean isRunning;
@@ -56,23 +48,17 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     private Graphics graPixel;
     private Graphics gEscenario;
 
-    // Definición de códigos de región para recorte de lineas
+    // Definición de códigos de región
     private static final int INSIDE = 0; // 0000
     private static final int LEFT = 1;   // 0001
     private static final int RIGHT = 2;  // 0010
     private static final int BOTTOM = 4; // 0100
     private static final int TOP = 8;    // 1000
 
-
-    private enum BarrelState {
-        FIRST_LINE,
-        SECOND_LINE_VERTICAL,
-        THIRD_LINE,
-        FOURTH_LINE_VERTICAL,
-        FIFTH_LINE,
-        SIXTH_LINE,
-        SEVENTH_LINE
-    }
+    private static final int xLeft = 0;
+    private static final int xRight = 800;
+    private static final int yTop = 0;
+    private static final int yBottom = 500;
 
     private enum PlayerState {
         FIRST_LINE,
@@ -81,7 +67,6 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         SEVENTH_LINE
     }
 
-    private BarrelState barrelState;
     private PlayerState playerState;
 
     public DonkeyKongGameV2() {
@@ -94,7 +79,9 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
         addKeyListener(this);
 
-        barrelState = BarrelState.FIRST_LINE;
+
+        barrels = new ArrayList<>();
+        createRandomBarrels();
         playerState = PlayerState.SEVENTH_LINE;
 
         ladders = new ArrayList<>();
@@ -110,10 +97,6 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
         playerX = 20;
         playerY = HEIGHT - 60;
-
-        barrelX = 50;
-        barrelY = 100;
-        barrelVisible = false;
 
         isRunning = true;
         bufferImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
@@ -135,7 +118,9 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
         while (isRunning) {
             // Actualizacion de movimiento de barril
-            logicMoveBarrel();
+            for (Barrel barrel : barrels) {
+                barrel.logicMoveBarrel(playerX, playerY);
+            }
             // Actualizacion de movimiento de jugador
             logicMovePlayer();
             // Verificar si el jugador alcanza la bandera
@@ -173,11 +158,10 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         drawRectangle(graPixel,  playerX, playerY, playerX + 20, playerY + 20, Color.red);
 
         // Dibuja el barril si está visible
-        if (barrelVisible) {
-            int[] x2Points = {barrelX, barrelX + 20, barrelX + 20, barrelX};
-            int[] y2Points = {barrelY, barrelY, barrelY + 20, barrelY + 20};
-            fillPolygonScanLine(graPixel,x2Points, y2Points, Color.red);
-            drawRectangle(graPixel,barrelX, barrelY, barrelX + 20, barrelY + 20, Color.white);
+        for (Barrel barrel : barrels) {
+            if (barrel.barrelVisible) {
+                drawBresenhamCircumference(graPixel, barrel.barrelX + 10, barrel.barrelY + 10, 10, Color.red);
+            }
         }
 
         // Dibuja el buffer en la pantalla
@@ -190,7 +174,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
     /****************** DIBUJOS COMPUESTOS *******************/
     public void dibujarEscenario(Graphics gEscenario) {
-        //dibujarFondo(gEscenario);
+        dibujarFondo(gEscenario);
         dibujarBandera(gEscenario);
         dibujarPlataformas(gEscenario);
         dibujarEscaleras(gEscenario);
@@ -315,180 +299,15 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         drawLine(gEscenario,665, 665, 260, 460, 3, Color.cyan);
     }
 
-    /****************** MOVIMIENTO DEL BARRIL *******************/
-    private void moveBarrelFirstLine() {
-        //System.out.println("Moviendo barril por la primer linea");
-        int endX = 620; // Inicio de la escalera 1
-
-        barrelX+=BARREL_MOVE_SPEED;
-
-        // Verificar si se alcanzó el final de la primera línea
-        if (barrelX >= endX) {
-            reachedVerticalLine = true;
+    /****************** CREACION DE BARRILES *******************/
+    private void createRandomBarrels() {
+        Random random = new Random();
+        for (int i = 0; i < NUMBER_BARRELS; i++) {
+            int randomSpeed = random.nextInt(3) + 1; // Generar velocidad aleatoria entre 1 y 3
+            Barrel barrel = new Barrel(randomSpeed); // Crear barril con velocidad aleatoria
+            barrels.add(barrel); // Agregar barril a la lista
         }
     }
-
-    private void moveBarrelSecondLineVertical() {
-        //System.out.println("Moviendo barril por la segunda linea");
-        int endYVertical = 170;
-
-        barrelY+=BARREL_MOVE_SPEED;
-
-        barrelY = Math.min(barrelY, endYVertical - BARREL_HEIGHT);
-
-        if (barrelY >= endYVertical - BARREL_HEIGHT) {
-            reachedThirdLine = true;
-        }
-    }
-
-
-    private void moveBarrelThirdLine() {
-        //System.out.println("Moviendo barril por la tercera linea");
-        int endX = 240; // Inicio de la tercera línea
-
-        barrelX-=BARREL_MOVE_SPEED;
-        if (barrelX <= endX) {
-            reachedSecondVerticalLine = true;
-        }
-    }
-
-    private void moveBarrelFourthLineVertical() {
-        //System.out.println("Moviendo barril por la cuarta linea");
-        int endYVertical = 260; // Fin de la segunda escalera
-
-        barrelY+=BARREL_MOVE_SPEED;
-
-        barrelY = Math.min(barrelY, endYVertical - BARREL_HEIGHT);
-
-        if (barrelY >= endYVertical - BARREL_HEIGHT) {
-            barrelState = BarrelState.FIFTH_LINE;
-        }
-    }
-
-    private void moveBarrelFifthLine() {
-        //System.out.println("Moviendo barril por la quinta linea");
-        //(x1: 0, y1: 280, x2: 700, y2: 330);
-        int endX = 640; // Inicio de la quinta línea
-
-        barrelX+=BARREL_MOVE_SPEED;
-
-        if (barrelX >= endX) {
-            reachedSixthVerticalLine = true;
-        }
-    }
-
-    private void moveBarrelSixthLineVertical() {
-        //System.out.println("Moviendo barril por la sexta linea");
-        int endYVertical = 460; // Fin de la tercera escalera
-
-        barrelY+=BARREL_MOVE_SPEED;
-
-        barrelY = Math.min(barrelY, endYVertical - BARREL_HEIGHT);
-
-        if (barrelY >= endYVertical - BARREL_HEIGHT) {
-            barrelState = BarrelState.SEVENTH_LINE;
-        }
-    }
-
-    private void moveBarrelSeventhLine() {
-        //(x1: 800, y1: 415, x2: 0, y2: 465);
-        //System.out.println("Moviendo barril por la septima linea");
-        int endX = 0; // Inicio de la tercera línea
-
-        barrelX-=BARREL_MOVE_SPEED;
-
-        if (barrelX <= endX) {
-            reachedSecondVerticalLine = true;
-        }
-    }
-
-
-
-    private void moveBarrel() {
-        switch (barrelState) {
-            case FIRST_LINE:
-                moveBarrelFirstLine();
-                if (reachedVerticalLine) {
-                    barrelState = BarrelState.SECOND_LINE_VERTICAL;
-                }
-                break;
-            case SECOND_LINE_VERTICAL:
-                moveBarrelSecondLineVertical();
-                if (reachedThirdLine) {
-                    barrelState = BarrelState.THIRD_LINE;
-                }
-                break;
-            case THIRD_LINE:
-                moveBarrelThirdLine();
-                if (reachedSecondVerticalLine) {
-                    barrelState = BarrelState.FOURTH_LINE_VERTICAL;
-                }
-                break;
-            case FOURTH_LINE_VERTICAL:
-                moveBarrelFourthLineVertical();
-                if (reachedFifthLine) {
-                    barrelState = BarrelState.FIFTH_LINE;
-                }
-                break;
-            case FIFTH_LINE:
-                moveBarrelFifthLine();
-                if (reachedSixthVerticalLine) {
-                    barrelState = BarrelState.SIXTH_LINE;
-                }
-                break;
-            case SIXTH_LINE:
-                moveBarrelSixthLineVertical();
-                if (reachedSeventhhLine) {
-                    barrelState = BarrelState.SEVENTH_LINE;
-                }
-                break;
-            case SEVENTH_LINE:
-                moveBarrelSeventhLine();
-                break;
-            default:
-                break;
-        }
-    }
-
-    private void resetBarrel() {
-        barrelX = 120;
-        barrelY = 60;
-        barrelVisible = true;
-
-        reachedVerticalLine = false;
-        reachedThirdLine = false;
-        reachedSecondVerticalLine = false;
-        reachedFifthLine = false;
-        reachedSixthVerticalLine = false;
-        reachedSeventhhLine = false;
-
-        barrelState = BarrelState.FIRST_LINE;
-    }
-
-
-    public void logicMoveBarrel() {
-        // Mueve el barril hacia abajo si está visible
-        if (barrelVisible) {
-            moveBarrel();
-            // Comprueba si el barril colisiona con el jugador
-            if (barrelX + 20 >= playerX && barrelX <= playerX + 20 && barrelY + 20 >= playerY && barrelY <= playerY + 20) {
-                // Colisión detectada
-                JOptionPane.showMessageDialog(this, "¡Has sido golpeado por un barril! Juego terminado.");
-                System.exit(0);
-            }
-            // Si el barril llega al suelo o sale de los limites en X, desaparece
-            if (barrelY >= HEIGHT || barrelX < 0) {
-                barrelVisible = false;
-            }
-        } else {
-            // Genera un nuevo barril un tiempo aleatorio despues de que el primero desaparezca
-            if (Math.random() < 0.01) {
-                resetBarrel();
-            }
-        }
-    }
-
-
 
     /****************** MOVIMIENTO DEL JUGADOR *******************/
 
@@ -673,77 +492,6 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         }
     }
 
-    public void drawBresenhamCutLine(Graphics g, int x0, int x1, int y0, int y1, int xLeft, int xRight, int yTop, int yBottom, Color color) {
-        int dx = Math.abs(x1 - x0);
-        int dy = Math.abs(y1 - y0);
-        int sx = x0 < x1 ? 1 : -1;
-        int sy = y0 < y1 ? 1 : -1;
-        int err = dx - dy;
-
-        while (true) {
-            int code0 = computeOutCode(x0, y0, xLeft, xRight, yTop, yBottom);
-            int code1 = computeOutCode(x1, y1, xLeft, xRight, yTop, yBottom);
-
-            if ((code0 | code1) == 0) { // Ambos puntos están dentro de la ventana
-                putPixel(g, x0, y0, color);
-                if (x0 == x1 && y0 == y1)
-                    break;
-                int e2 = 2 * err;
-                if (e2 > -dy) {
-                    err -= dy;
-                    x0 += sx;
-                }
-                if (e2 < dx) {
-                    err += dx;
-                    y0 += sy;
-                }
-            } else if ((code0 & code1) != 0) { // Ambos puntos están fuera de la ventana en la misma región
-                break;
-            } else {
-                int codeOut = (code0 != 0) ? code0 : code1;
-                int x, y;
-
-                if ((codeOut & TOP) != 0) {
-                    x = x0 + (x1 - x0) * (yTop - y0) / (y1 - y0);
-                    y = yTop;
-                } else if ((codeOut & BOTTOM) != 0) {
-                    x = x0 + (x1 - x0) * (yBottom - y0) / (y1 - y0);
-                    y = yBottom;
-                } else if ((codeOut & RIGHT) != 0) {
-                    y = y0 + (y1 - y0) * (xRight - x0) / (x1 - x0);
-                    x = xRight;
-                } else {
-                    y = y0 + (y1 - y0) * (xLeft - x0) / (x1 - x0);
-                    x = xLeft;
-                }
-
-                if (codeOut == code0) {
-                    x0 = x;
-                    y0 = y;
-                } else {
-                    x1 = x;
-                    y1 = y;
-                }
-            }
-        }
-    }
-
-    private int computeOutCode(int x, int y, int xLeft, int xRight, int yTop, int yBottom) {
-        int code = INSIDE;
-
-        if (x < xLeft)
-            code |= LEFT;
-        else if (x > xRight)
-            code |= RIGHT;
-
-        if (y < yTop)
-            code |= TOP;
-        else if (y > yBottom)
-            code |= BOTTOM;
-
-        return code;
-    }
-
     public void drawRectangle(Graphics g, int x0, int y0, int x1, int y1, Color color) {
         // If x0 has a greater value, exchange values with x1
         if (x0 > x1) {
@@ -859,15 +607,55 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             drawCirclePoints(g, centerX, centerY, x, y, color);
         }
     }
+
     private void drawCirclePoints(Graphics g, int centerX, int centerY, int x, int y, Color color) {
-        putPixel(g, centerX + x, centerY + y, color);
-        putPixel(g,centerX - x, centerY + y, color);
-        putPixel(g,centerX + x, centerY - y, color);
-        putPixel(g,centerX - x, centerY - y, color);
-        putPixel(g,centerX + y, centerY + x, color);
-        putPixel(g,centerX - y, centerY + x, color);
-        putPixel(g,centerX + y, centerY - x, color);
-        putPixel(g,centerX - y, centerY - x, color);
+        int code = calculateRegionCode(centerX + x, centerY + y);
+        if (code == INSIDE) {
+            putPixel(g, centerX + x, centerY + y, color);
+        }
+        code = calculateRegionCode(centerX - x, centerY + y);
+        if (code == INSIDE) {
+            putPixel(g, centerX - x, centerY + y, color);
+        }
+        code = calculateRegionCode(centerX + x, centerY - y);
+        if (code == INSIDE) {
+            putPixel(g, centerX + x, centerY - y, color);
+        }
+        code = calculateRegionCode(centerX - x, centerY - y);
+        if (code == INSIDE) {
+            putPixel(g, centerX - x, centerY - y, color);
+        }
+        code = calculateRegionCode(centerX + y, centerY + x);
+        if (code == INSIDE) {
+            putPixel(g, centerX + y, centerY + x, color);
+        }
+        code = calculateRegionCode(centerX - y, centerY + x);
+        if (code == INSIDE) {
+            putPixel(g, centerX - y, centerY + x, color);
+        }
+        code = calculateRegionCode(centerX + y, centerY - x);
+        if (code == INSIDE) {
+            putPixel(g, centerX + y, centerY - x, color);
+        }
+        code = calculateRegionCode(centerX - y, centerY - x);
+        if (code == INSIDE) {
+            putPixel(g, centerX - y, centerY - x, color);
+        }
+    }
+
+    private int calculateRegionCode(int x, int y) {
+        int code = INSIDE;
+        if (x < xLeft) {
+            code |= LEFT;
+        } else if (x > xRight) {
+            code |= RIGHT;
+        }
+        if (y < yTop) {
+            code |= TOP;
+        } else if (y > yBottom) {
+            code |= BOTTOM;
+        }
+        return code;
     }
 
     public void drawEllipse(Graphics g, int centerX, int centerY, int radiusMajor, int radiusMinor, Color color) {
@@ -951,7 +739,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         }
     }
 
-    /*public void floodFill(Graphics g, int x, int y, Color targetColor, Color fillColor) {
+    public void floodFill(Graphics g, int x, int y, Color targetColor, Color fillColor) {
         Queue<Point> queue = new ArrayDeque<>();
         queue.add(new Point(x, y));
 
@@ -971,5 +759,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
                 queue.add(new Point(px, py - 1));
             }
         }
-    }*/
+    }
+
+
 }

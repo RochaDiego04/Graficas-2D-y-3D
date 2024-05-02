@@ -1,10 +1,13 @@
 package proyectoDK;
 
+import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,10 +15,31 @@ import java.util.*;
 
 public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     // COLORES
-    public static final Color SKY1 = new Color(0, 18, 32);
-    public static final Color SKY2 = new Color(0, 21, 35);
-    public static final Color SKY3 = new Color(1, 24, 38);
-    public static final Color SKY4 = new Color(0, 31, 47);
+    public static final Color SKY1 = new Color(0, 10, 20);
+    public static final Color SKY2 = new Color(0, 13, 23);
+    public static final Color SKY3 = new Color(1, 16, 26);
+    public static final Color SKY4 = new Color(0, 23, 35);
+    public static final Color SKY5 = new Color(0, 31, 47);
+
+    public static final Color GRASS1 = new Color(61, 107, 73);
+    public static final Color GRASS2 = new Color(36, 73, 49);
+    public static final Color GRASS3 = new Color(20, 35, 25);
+    public static final Color GROUND1 = new Color(17, 25, 20);
+    public static final Color GROUND2 = new Color(15, 22, 20);
+    public static final Color GROUND3 = new Color(13, 18, 20);
+    public static final Color GROUND4 = new Color(10, 15, 17);
+
+    public static final Color PLATFORM1 = new Color(169, 17, 63);
+    public static final Color PLATFORM2 = new Color(203, 58, 103);
+
+    public static final Color STAIRS2 = new Color(0, 187, 187);
+    public static final Color STAIRS1 = new Color(12, 108, 108);
+
+    public static final Color MOON = new Color(203, 202, 202);
+    public static final Color MOONDETAILS = new Color(183, 183, 183);
+    public static final Color BARRELS1 = new Color(93, 53, 45);
+    public static final Color BARRELS2 = new Color(63, 36, 31);
+    public static final Color BARRELS3 = new Color(128, 79, 74);
 
     // DIMENSIONES DE VENTANA
     private static final int WIDTH = 800;
@@ -27,14 +51,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     // Ladders
     private ArrayList<int[]> ladders;
 
-    // Player movement
-    private int playerX;
-    private int playerY;
-    private int playerVy = 0; // Velocidad vertical del jugador
-    private int playerVx = 0; // Velocidad horizontal del jugador
-    private final int MOVE_SPEED = 2; // Velocidad de movimiento
-    private final int GRAVITY = 1; // Gravedad
-    private final int JUMP_SPEED = 10; // Velocidad desalto
+    private Player player;
 
     // Barrel
     private List<Barrel> barrels;
@@ -43,8 +60,8 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     // THREAD AND BUFFER
     private boolean isRunning;
     private BufferedImage bufferImage;
-    private Image buffer;
-    private Image bufferEscenario;
+    private BufferedImage buffer;
+    private BufferedImage bufferEscenario;
     private Graphics graPixel;
     private Graphics gEscenario;
 
@@ -60,14 +77,6 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     private static final int yTop = 0;
     private static final int yBottom = 500;
 
-    private enum PlayerState {
-        FIRST_LINE,
-        THIRD_LINE,
-        FIFTH_LINE,
-        SEVENTH_LINE
-    }
-
-    private PlayerState playerState;
 
     public DonkeyKongGameV2() {
         setTitle("Donkey Kong Game");
@@ -82,7 +91,8 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
         barrels = new ArrayList<>();
         createRandomBarrels();
-        playerState = PlayerState.SEVENTH_LINE;
+
+        player = new Player(this);
 
         ladders = new ArrayList<>();
         ladders.add(new int[]{610, 60, 20, 110}); // Escalera 1
@@ -95,15 +105,11 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         platforms.add(new int[]{0, 260, 700, 20}); // x, y, width, height
         platforms.add(new int[]{0, 460, 800, 20}); // x, y, width, height
 
-        playerX = 20;
-        playerY = HEIGHT - 60;
-
         isRunning = true;
         bufferImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 
         buffer = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
         graPixel = buffer.getGraphics(); // Inicializa graPixel aquí
-
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setVisible(true);
@@ -111,15 +117,15 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
     public void run() {
         // Dibujar buffer con imagen de fondo
-        bufferEscenario = createImage(getWidth(), getHeight());
+        bufferEscenario = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
         gEscenario = bufferEscenario.getGraphics();
 
-        dibujarEscenario(gEscenario);
+        drawScene(gEscenario);
 
         while (isRunning) {
             // Actualizacion de movimiento de barril
             for (Barrel barrel : barrels) {
-                barrel.logicMoveBarrel(playerX, playerY);
+                barrel.logicMoveBarrel(player.playerX, player.playerY);
             }
             // Actualizacion de movimiento de jugador
             logicMovePlayer();
@@ -140,10 +146,10 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     @Override
     public void update(Graphics graphics) {
         graphics.setClip(0, 0, getWidth(), getHeight());
-        buffer = createImage(getWidth(), getHeight());
+        buffer = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
         graPixel = buffer.getGraphics();
         graPixel.setClip(0, 0, getWidth(), getHeight());
-        graphics.drawImage(buffer, 0, 0, this);
+        graphics.drawImage(bufferEscenario, 0, 0, this);
     }
 
     @Override
@@ -152,15 +158,17 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         graPixel.drawImage(bufferEscenario, 0, 0, null);
 
         // Dibuja al jugador
-        int[] xPoints = {playerX, playerX + 20, playerX + 20, playerX};
-        int[] yPoints = {playerY, playerY, playerY + 20, playerY + 20};
+        int[] xPoints = {player.playerX, player.playerX + 20, player.playerX + 20, player.playerX};
+        int[] yPoints = {player.playerY, player.playerY, player.playerY + 20, player.playerY + 20};
         fillPolygonScanLine(graPixel,xPoints, yPoints, Color.white);
-        drawRectangle(graPixel,  playerX, playerY, playerX + 20, playerY + 20, Color.red);
+        drawRectangle(graPixel,  player.playerX, player.playerY, player.playerX + 20, player.playerY + 20, Color.red);
 
         // Dibuja el barril si está visible
         for (Barrel barrel : barrels) {
             if (barrel.barrelVisible) {
-                drawBresenhamCircumference(graPixel, barrel.barrelX + 10, barrel.barrelY + 10, 10, Color.red);
+                drawCircumference(graPixel,barrel.barrelX + 10, barrel.barrelY + 10,8,4,BARRELS2);
+                drawCircumference(graPixel,barrel.barrelX + 10, barrel.barrelY + 10,3,2,BARRELS1);
+                drawBresenhamCircumference(graPixel, barrel.barrelX + 10, barrel.barrelY + 10, 6, BARRELS3);
             }
         }
 
@@ -173,14 +181,37 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     }
 
     /****************** DIBUJOS COMPUESTOS *******************/
-    public void dibujarEscenario(Graphics gEscenario) {
-        dibujarFondo(gEscenario);
-        dibujarBandera(gEscenario);
-        dibujarPlataformas(gEscenario);
-        dibujarEscaleras(gEscenario);
+    public void drawScene(Graphics gEscenario) {
+        drawBackground(gEscenario);
+        drawFlag(gEscenario);
+        drawPlatforms(gEscenario);
+        drawStairs(gEscenario);
     }
 
-    public void dibujarFondo(Graphics gEscenario) {
+    public void drawBackground(Graphics gEscenario) {
+        drawSky(gEscenario);
+        drawGrass(gEscenario);
+        drawMoon(gEscenario);
+    }
+
+    public void drawMoon(Graphics gEscenario) {
+        drawBresenhamCircumference(gEscenario, 750, 100, 50, MOON);
+        floodFill(gEscenario, 750, 100, MOON, MOON);
+
+        drawBresenhamCircumference(gEscenario, 730, 80, 15, MOONDETAILS);
+        floodFill(gEscenario, 730, 80, MOONDETAILS, MOONDETAILS);
+
+        drawBresenhamCircumference(gEscenario, 780, 105, 10, MOONDETAILS);
+        floodFill(gEscenario, 780, 105, MOONDETAILS, MOONDETAILS);
+
+        drawEllipse(gEscenario, 750, 120, 12, 5, MOONDETAILS);
+        floodFill(gEscenario, 750, 120, MOONDETAILS, MOONDETAILS);
+
+        drawBresenhamCircumference(gEscenario, 720, 125, 4, MOONDETAILS);
+        floodFill(gEscenario, 720, 125, MOONDETAILS, MOONDETAILS);
+    }
+
+    public void drawSky(Graphics gEscenario) {
         // CIELO
         int[] xPoints = {0, getWidth(), getWidth(), 0};
         int[] yPoints = {30, 30, 150, 150};
@@ -197,30 +228,103 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         xPoints = new int[]{0, getWidth(), getWidth(), 0};
         yPoints = new int[]{215, 215, 280, 280};
         fillPolygonScanLine(gEscenario,xPoints, yPoints, SKY4);
+
+        xPoints = new int[]{0, getWidth(), getWidth(), 0};
+        yPoints = new int[]{280, 280, 345, 345};
+        fillPolygonScanLine(gEscenario,xPoints, yPoints, SKY5);
     }
 
-    public void dibujarBandera(Graphics gEscenario) {
+    public void drawGrass(Graphics gEscenario) {
+        // PASTO
+        int[] xPoints = {0, getWidth(), getWidth(), 0};
+        int[] yPoints = {345, 345, 350, 350};
+        fillPolygonScanLine(gEscenario,xPoints, yPoints, GRASS2);
+
+        xPoints = new int[]{0, getWidth(), getWidth(), 0};
+        yPoints = new int[]{350, 350, 355, 355};
+        fillPolygonScanLine(gEscenario,xPoints, yPoints, GRASS3);
+
+        // SUELO
+        xPoints = new int[]{0, getWidth(), getWidth(), 0};
+        yPoints = new int[]{355, 355, 365, 365};
+        fillPolygonScanLine(gEscenario,xPoints, yPoints, GROUND1);
+
+        xPoints = new int[]{0, getWidth(), getWidth(), 0};
+        yPoints = new int[]{365, 365, 380, 380};
+        fillPolygonScanLine(gEscenario,xPoints, yPoints, GROUND2);
+
+        xPoints = new int[]{0, getWidth(), getWidth(), 0};
+        yPoints = new int[]{380, 380, 400, 400};
+        fillPolygonScanLine(gEscenario,xPoints, yPoints, GROUND3);
+
+        xPoints = new int[]{0, getWidth(), getWidth(), 0};
+        yPoints = new int[]{400, 400, 500, 500};
+        fillPolygonScanLine(gEscenario,xPoints, yPoints, GROUND4);
+
+        // DETALLES PASTO
+        for(int y = 345; y < 350; y++) {
+            drawLine(gEscenario,0, 800, y, y, false , GRASS1, 0b111111011111);
+        }
+        for(int y = 350; y < 355; y++) {
+            drawLine(gEscenario,0, 800, y, y, false , GRASS1, 0b111000001100001111);
+        }
+
+        for(int y = 350; y < 360; y++) {
+            drawLine(gEscenario,0, 800, y, y, false , GRASS2, 0b11111100111110001110000101000011);
+        }
+        for(int y = 360; y < 365; y++) {
+            drawLine(gEscenario,0, 800, y, y, false , GRASS2, 0b1100000011100011100000111000011);
+        }
+
+        for(int y = 360; y < 370; y++) {
+            drawLine(gEscenario,0, 800, y, y, false , GRASS3, 0b1111110001000011110011110100011);
+        }
+        for(int y = 370; y < 375; y++) {
+            drawLine(gEscenario,0, 800, y, y, false , GRASS3, 0b00010010000100011100000100001001);
+        }
+
+        for(int y = 375; y < 385; y++) {
+            drawLine(gEscenario,0, 800, y, y, false , GROUND1, 0b010010001001000001000100001001);
+        }
+        for(int y = 380; y < 395; y++) {
+            drawLine(gEscenario,0, 800, y, y, false , GROUND2, 0b000100010000010000010000001);
+        }
+        for(int y = 400; y < 420; y++) {
+            drawLine(gEscenario,0, 800, y, y, false , GROUND3, 0b0000110001000001100001000001);
+        }
+        for(int y = 400; y < 410; y++) {
+            drawLine(gEscenario,0, 800, y, y, false , GROUND3, 0b110000101000001000001000);
+        }
+    }
+
+    public void drawFlag(Graphics gEscenario) {
         drawBresenhamLine(gEscenario, 49, 49, 50, 80, Color.white);
         drawRightTriangle(gEscenario, 50, 60, 60, 60, 50,50, Color.white);
-        //drawBresenhamCircumference(gEscenario, 50,50,10, Color.red);
+        floodFill(gEscenario, 55, 56, Color.white, Color.white);
     }
 
-    public void dibujarPlataformas(Graphics gEscenario) {
+    public void drawPlatforms(Graphics gEscenario) {
         // plataforma 1
         int yStart = 80;
         int yEnd = 90;
         int startX = 0;
         int endX = 10;
+
+        drawBresenhamLine(gEscenario,0, 700, 81, 81, PLATFORM2); // shine of platforms
+
         while (endX <= 700) {
-            drawBresenhamLine(gEscenario, startX, endX, yStart, yEnd, Color.orange);
-            drawBresenhamLine(gEscenario, endX, endX + 10, yEnd, yStart, Color.orange);
+            drawBresenhamLine(gEscenario, startX + 2, endX, yStart, yEnd, PLATFORM2); // shine of platforms
+            drawBresenhamLine(gEscenario, endX + 2, endX + 10, yEnd, yStart, PLATFORM2); // shine of platforms
+
+            drawBresenhamLine(gEscenario, startX, endX, yStart, yEnd, PLATFORM1);
+            drawBresenhamLine(gEscenario, endX, endX + 10, yEnd, yStart, PLATFORM1);
 
             startX += 20;
             endX += 20;
         }
 
-        drawBresenhamLine(gEscenario, 0, 700, 80, 80, Color.orange); // x0, x1, y0. y1
-        drawBresenhamLine(gEscenario, 0, 700, 90, 90, Color.orange); // x0, x1, y0. y1
+        drawBresenhamLine(gEscenario, 0, 700, 80, 80, PLATFORM1); // x0, x1, y0. y1
+        drawBresenhamLine(gEscenario, 0, 700, 90, 90, PLATFORM1); // x0, x1, y0. y1
 
         // plataforma 3
         int yStart_Platform3 = 170;
@@ -228,16 +332,21 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         int startX_Platform3 = 70; // Empieza desde x = 70
         int endX_Platform3 = 80; // Termina en x = 80, ya que se incrementará en el bucle
 
+        drawBresenhamLine(gEscenario,800, 70, 171, 171, PLATFORM2); // shine of platforms
+
         while (endX_Platform3 <= 800) {
-            drawBresenhamLine(gEscenario, startX_Platform3, endX_Platform3, yStart_Platform3, yEnd_Platform3, Color.orange);
-            drawBresenhamLine(gEscenario, endX_Platform3, endX_Platform3 + 10, yEnd_Platform3, yStart_Platform3, Color.orange);
+            drawBresenhamLine(gEscenario, startX_Platform3 + 2, endX_Platform3, yStart_Platform3, yEnd_Platform3, PLATFORM2); // shine of platforms
+            drawBresenhamLine(gEscenario, endX_Platform3 + 2, endX_Platform3 + 10, yEnd_Platform3, yStart_Platform3, PLATFORM2); // shine of platforms
+
+            drawBresenhamLine(gEscenario, startX_Platform3, endX_Platform3, yStart_Platform3, yEnd_Platform3, PLATFORM1);
+            drawBresenhamLine(gEscenario, endX_Platform3, endX_Platform3 + 10, yEnd_Platform3, yStart_Platform3, PLATFORM1);
 
             startX_Platform3 += 20;
             endX_Platform3 += 20;
         }
 
-        drawBresenhamLine(gEscenario,800, 70, 170, 170, Color.orange);
-        drawBresenhamLine(gEscenario,800, 70, 180, 180, Color.orange);
+        drawBresenhamLine(gEscenario,800, 70, 170, 170, PLATFORM1);
+        drawBresenhamLine(gEscenario,800, 70, 180, 180, PLATFORM1);
 
         // plataforma 5
         int yStart_Platform5 = 260;
@@ -245,16 +354,21 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         int startX_Platform5 = 0;
         int endX_Platform5 = 10;
 
+        drawBresenhamLine(gEscenario,0, 700, 261, 261, PLATFORM2); // shine of platforms
+
         while (endX_Platform5 <= 700) {
-            drawBresenhamLine(gEscenario, startX_Platform5, endX_Platform5, yStart_Platform5, yEnd_Platform5, Color.orange);
-            drawBresenhamLine(gEscenario, endX_Platform5, endX_Platform5 + 10, yEnd_Platform5, yStart_Platform5, Color.orange);
+            drawBresenhamLine(gEscenario, startX_Platform5 + 2, endX_Platform5, yStart_Platform5, yEnd_Platform5, PLATFORM2); // shine of platforms
+            drawBresenhamLine(gEscenario, endX_Platform5 + 2, endX_Platform5 + 10, yEnd_Platform5, yStart_Platform5, PLATFORM2); // shine of platforms
+
+            drawBresenhamLine(gEscenario, startX_Platform5, endX_Platform5, yStart_Platform5, yEnd_Platform5, PLATFORM1);
+            drawBresenhamLine(gEscenario, endX_Platform5, endX_Platform5 + 10, yEnd_Platform5, yStart_Platform5, PLATFORM1);
 
             startX_Platform5 += 20;
             endX_Platform5 += 20;
         }
 
-        drawBresenhamLine(gEscenario,0, 700, 260, 260, Color.orange);
-        drawBresenhamLine(gEscenario,0, 700, 270, 270, Color.orange);
+        drawBresenhamLine(gEscenario,0, 700, 260, 260, PLATFORM1);
+        drawBresenhamLine(gEscenario,0, 700, 270, 270, PLATFORM1);
 
         // plataforma 7
         int yStart_Platform7 = 460;
@@ -262,72 +376,91 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         int startX_Platform7 = 0;
         int endX_Platform7 = 10;
 
+        drawBresenhamLine(gEscenario,800, 0, 461, 461, PLATFORM2);
+
         while (endX_Platform7 <= 800) {
-            drawBresenhamLine(gEscenario, startX_Platform7, endX_Platform7, yStart_Platform7, yEnd_Platform7, Color.orange);
-            drawBresenhamLine(gEscenario, endX_Platform7, endX_Platform7 + 10, yEnd_Platform7, yStart_Platform7, Color.orange);
+            drawBresenhamLine(gEscenario, startX_Platform7 + 2, endX_Platform7, yStart_Platform7, yEnd_Platform7, PLATFORM2);
+            drawBresenhamLine(gEscenario, endX_Platform7 + 2, endX_Platform7 + 10, yEnd_Platform7, yStart_Platform7, PLATFORM2);
+
+            drawBresenhamLine(gEscenario, startX_Platform7, endX_Platform7, yStart_Platform7, yEnd_Platform7, PLATFORM1);
+            drawBresenhamLine(gEscenario, endX_Platform7, endX_Platform7 + 10, yEnd_Platform7, yStart_Platform7, PLATFORM1);
 
             startX_Platform7 += 20;
             endX_Platform7 += 20;
         }
-        drawBresenhamLine(gEscenario,800, 0, 460, 460, Color.orange);
-        drawBresenhamLine(gEscenario,800, 0, 470, 470, Color.orange);
+        drawBresenhamLine(gEscenario,800, 0, 460, 460, PLATFORM1);
+        drawBresenhamLine(gEscenario,800, 0, 470, 470, PLATFORM1);
     }
 
-    public void dibujarEscaleras(Graphics gEscenario) {
+    public void drawStairs(Graphics gEscenario) {
         // Dibuja escalera 1
         //drawBresenhamLine(630, 630, 80, 170, Color.blue);
-        drawLine(gEscenario,615, 615, 80, 170, 3, Color.cyan);
+        drawLine(gEscenario,616, 616, 80, 170, 3, STAIRS2);
+        drawLine(gEscenario,615, 615, 80, 170, 3, STAIRS1);
         for (int i = 620; i <= 640; i++) {
-            drawLine(gEscenario,i, i, 80, 170, false , Color.cyan);
+            drawLine(gEscenario,i, i, 80, 170, false , STAIRS1, 0b111100000000);
         }
-        drawLine(gEscenario,645, 645, 80, 170, 3, Color.cyan);
+        drawLine(gEscenario,646, 646, 80, 170, 3, STAIRS2);
+        drawLine(gEscenario,645, 645, 80, 170, 3, STAIRS1);
 
         // Dibuja escalera 2
         //drawBresenhamLine(250, 250, 170, 260, Color.red);
-        drawLine(gEscenario,235, 235, 170, 260, 3, Color.cyan);
+        drawLine(gEscenario,236, 236, 170, 260, 3, STAIRS2);
+        drawLine(gEscenario,235, 235, 170, 260, 3, STAIRS1);
         for (int i = 240; i <= 260; i++) {
-            drawLine(gEscenario,i, i, 170, 260, false , Color.cyan);
+            drawLine(gEscenario,i, i, 170, 260, false , STAIRS1, 0b111100000000);
         }
-        drawLine(gEscenario,265, 265, 170, 260, 3, Color.cyan);
+        drawLine(gEscenario,266, 266, 170, 260, 3, STAIRS2);
+        drawLine(gEscenario,265, 265, 170, 260, 3, STAIRS1);
 
         // Dibuja escalera 3
         // drawBresenhamLine(650, 650, 260, 460, Color.blue); Linea original
-        drawLine(gEscenario,635, 635, 260, 460, 3, Color.cyan);
+        drawLine(gEscenario,636, 636, 260, 460, 3, STAIRS2);
+        drawLine(gEscenario,635, 635, 260, 460, 3, STAIRS1);
         for (int i = 640; i <= 660; i++) {
-            drawLine(gEscenario,i, i, 260, 460, false , Color.cyan);
+            drawLine(gEscenario,i, i, 260, 460, false , STAIRS1, 0b111100000000);
         }
-        drawLine(gEscenario,665, 665, 260, 460, 3, Color.cyan);
+        drawLine(gEscenario,666, 666, 260, 460, 3, STAIRS2);
+        drawLine(gEscenario,665, 665, 260, 460, 3, STAIRS1);
     }
 
     /****************** CREACION DE BARRILES *******************/
     private void createRandomBarrels() {
         Random random = new Random();
-        for (int i = 0; i < NUMBER_BARRELS; i++) {
+        // Crear dos barriles con velocidad entre 3 y 4
+        for (int i = 0; i < NUMBER_BARRELS / 2; i++) {
+            int randomSpeed = random.nextInt(2) + 3; // Generar velocidad aleatoria entre 3 y 4
+            Barrel barrel = new Barrel(randomSpeed, this); // Crear barril con velocidad aleatoria
+            barrels.add(barrel); // Agregar barril a la lista
+        }
+        // Crear dos barriles con velocidad entre 1 y 3
+        for (int i = 0; i < NUMBER_BARRELS / 2; i++) {
             int randomSpeed = random.nextInt(3) + 1; // Generar velocidad aleatoria entre 1 y 3
-            Barrel barrel = new Barrel(randomSpeed); // Crear barril con velocidad aleatoria
+            Barrel barrel = new Barrel(randomSpeed, this); // Crear barril con velocidad aleatoria
             barrels.add(barrel); // Agregar barril a la lista
         }
     }
+
 
     /****************** MOVIMIENTO DEL JUGADOR *******************/
 
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
-        if (keyCode == KeyEvent.VK_LEFT && playerX > 0) {
-            playerVx = -MOVE_SPEED;
-        } else if (keyCode == KeyEvent.VK_RIGHT && playerX < WIDTH - 20) {
-            playerVx = MOVE_SPEED;
+        if (keyCode == KeyEvent.VK_LEFT && player.playerX > 0) {
+            player.playerVx = -player.MOVE_SPEED;
+        } else if (keyCode == KeyEvent.VK_RIGHT && player.playerX < WIDTH - 20) {
+            player.playerVx = player.MOVE_SPEED;
         } else if (keyCode == KeyEvent.VK_UP && isOnLadder()) { // Si el jugador está en una escalera
-            playerVy = -MOVE_SPEED; // Mueve al jugador hacia arriba
-        } else if (keyCode == KeyEvent.VK_UP && (playerY == HEIGHT - 60 || playerY == 260 - 20 || playerY == 170 - 20 || playerY == 80 - 20)) { // Permite saltar si el jugador está en el suelo o en las plataformas
-            playerVy = -JUMP_SPEED; // Inicia un salto
+            player.playerVy = -player.MOVE_SPEED; // Mueve al jugador hacia arriba
+        } else if (keyCode == KeyEvent.VK_UP && (player.playerY == HEIGHT - 60 || player.playerY == 260 - 20 || player.playerY == 170 - 20 || player.playerY == 80 - 20)) { // Permite saltar si el jugador está en el suelo o en las plataformas
+            player.playerVy = -player.JUMP_SPEED; // Inicia un salto
         }
     }
 
     public void keyReleased(KeyEvent e) {
         int keyCode = e.getKeyCode();
         if (keyCode == KeyEvent.VK_LEFT || keyCode == KeyEvent.VK_RIGHT) {
-            playerVx = 0; // Detiene el movimiento horizontal cuando se suelta la tecla
+            player.playerVx = 0; // Detiene el movimiento horizontal cuando se suelta la tecla
         }
     }
 
@@ -337,64 +470,64 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
     public void logicMovePlayer() {
         // Actualización de la posición vertical del jugador
-        playerY += playerVy;
+        player.playerY += player.playerVy;
         boolean isColliding = false; // Variable para mantener el estado de colisión
 
         // Comprobación de colisiones con las plataformas
-        if (playerVy > 0) { // Si el jugador está moviéndose hacia abajo
-            if (isCollidingWithPlatform(playerX, playerY + 1, 0) ||
-                    isCollidingWithPlatform(playerX, playerY + 1, 1) ||
-                    isCollidingWithPlatform(playerX, playerY + 1, 2) ||
-                    isCollidingWithPlatform(playerX, playerY + 1, 3)) {
+        if (player.playerVy > 0) { // Si el jugador está moviéndose hacia abajo
+            if (isCollidingWithPlatform(player.playerX, player.playerY + 1, 0) ||
+                    isCollidingWithPlatform(player.playerX, player.playerY + 1, 1) ||
+                    isCollidingWithPlatform(player.playerX, player.playerY + 1, 2) ||
+                    isCollidingWithPlatform(player.playerX, player.playerY + 1, 3)) {
                 // Detiene el movimiento vertical hacia abajo
-                playerVy = 0;
+                player.playerVy = 0;
             }
-        } else if (playerVy < 0) { // Si el jugador está moviéndose hacia arriba
-            if (isCollidingWithPlatform(playerX, playerY, 0) ||
-                    isCollidingWithPlatform(playerX, playerY, 1) ||
-                    isCollidingWithPlatform(playerX, playerY, 2) ||
-                    isCollidingWithPlatform(playerX, playerY, 3)) {
+        } else if (player.playerVy < 0) { // Si el jugador está moviéndose hacia arriba
+            if (isCollidingWithPlatform(player.playerX, player.playerY, 0) ||
+                    isCollidingWithPlatform(player.playerX, player.playerY, 1) ||
+                    isCollidingWithPlatform(player.playerX, player.playerY, 2) ||
+                    isCollidingWithPlatform(player.playerX, player.playerY, 3)) {
                 // Detiene el movimiento vertical hacia arriba
-                playerVy = 0;
+                player.playerVy = 0;
             }
         }
 
-        switch (playerState) {
+        switch (player.playerState) {
             case SEVENTH_LINE:
-                if (playerY < HEIGHT - 60 && playerY > 260 - 20) {
+                if (player.playerY < HEIGHT - 60 && player.playerY > 260 - 20) {
                     //System.out.println("Jugador en la primer area");
-                    playerVy += GRAVITY; // Aplica la gravedad si el jugador está en el aire
+                    player.playerVy += player.GRAVITY; // Aplica la gravedad si el jugador está en el aire
                 } else {
-                    playerY = HEIGHT - 60; // Asegura que el jugador no caiga por debajo del suelo
-                    playerVy = 0; // Detiene el movimiento hacia abajo
+                    player.playerY = HEIGHT - 60; // Asegura que el jugador no caiga por debajo del suelo
+                    player.playerVy = 0; // Detiene el movimiento hacia abajo
                 }
                 break;
             case FIFTH_LINE:
-                if (playerY < 260 - 20 && playerY > 170 - 20) { // Corregir la condición para aplicar la gravedad en la quinta línea
+                if (player.playerY < 260 - 20 && player.playerY > 170 - 20) { // Corregir la condición para aplicar la gravedad en la quinta línea
 
-                    playerVy += GRAVITY; // Aplica la gravedad si el jugador está en el aire
+                    player.playerVy += player.GRAVITY; // Aplica la gravedad si el jugador está en el aire
                 } else {
                     //System.out.println("moviendose por quinta linea");
-                    playerY = 260 - 20; // Asegura que el jugador no caiga más abajo de la quinta línea
-                    playerVy = 0; // Detiene el movimiento hacia abajo
+                    player.playerY = 260 - 20; // Asegura que el jugador no caiga más abajo de la quinta línea
+                    player.playerVy = 0; // Detiene el movimiento hacia abajo
                 }
                 break;
             case THIRD_LINE:
-                if (playerY < 170 - 20 && playerY > 80 - 20) {
+                if (player.playerY < 170 - 20 && player.playerY > 80 - 20) {
                     //System.out.println("Jugador en la tercer area");
-                    playerVy += GRAVITY; // Aplica la gravedad si el jugador está en el aire
+                    player.playerVy += player.GRAVITY; // Aplica la gravedad si el jugador está en el aire
                 } else {
                     //System.out.println("moviendose por tercera linea");
-                    playerY = 170 - 20; // Asegura que el jugador no caiga más abajo de la quinta línea
-                    playerVy = 0; // Detiene el movimiento hacia abajo
+                    player.playerY = 170 - 20; // Asegura que el jugador no caiga más abajo de la quinta línea
+                    player.playerVy = 0; // Detiene el movimiento hacia abajo
                 }
                 break;
             case FIRST_LINE:
-                if (playerY < 80 - 20) {
-                    playerVy += GRAVITY; // Aplica la gravedad si el jugador está en el aire
+                if (player.playerY < 80 - 20) {
+                    player.playerVy += player.GRAVITY; // Aplica la gravedad si el jugador está en el aire
                 } else {
-                    playerY = 80 - 20; // Asegura que el jugador no caiga más abajo de la séptima línea
-                    playerVy = 0; // Detiene el movimiento hacia abajo
+                    player.playerY = 80 - 20; // Asegura que el jugador no caiga más abajo de la séptima línea
+                    player.playerVy = 0; // Detiene el movimiento hacia abajo
                 }
                 break;
             default:
@@ -402,17 +535,17 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         }
 
         // Actualización de la posición horizontal del jugador
-        playerX += playerVx;
-        if (playerX < 0) { // Si el jugador está en el borde izquierdo
-            playerX = 0; // Asegura que el jugador no se salga por el borde izquierdo
-        } else if (playerX > WIDTH - 20) { // Si el jugador está en el borde derecho
-            playerX = WIDTH - 20; // Asegura que el jugador no se salga por el borde derecho
+        player.playerX += player.playerVx;
+        if (player.playerX < 0) { // Si el jugador está en el borde izquierdo
+            player.playerX = 0; // Asegura que el jugador no se salga por el borde izquierdo
+        } else if (player.playerX > WIDTH - 20) { // Si el jugador está en el borde derecho
+            player.playerX = WIDTH - 20; // Asegura que el jugador no se salga por el borde derecho
         }
     }
 
     private boolean isOnLadder() {
         for (int[] ladder : ladders) {
-            if (playerX >= ladder[0] && playerX <= ladder[0] + ladder[2] && playerY >= ladder[1] && playerY <= ladder[1] + ladder[3]) {
+            if (player.playerX >= ladder[0] && player.playerX <= ladder[0] + ladder[2] && player.playerY >= ladder[1] && player.playerY <= ladder[1] + ladder[3]) {
                 System.out.println("Esta en escalera");
                 return true;
             }
@@ -422,7 +555,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
     public void logicPlayerWins() {
 // Comprueba si el jugador colisiona con la bandera
-        if (playerX + 20 >= 49 && playerX <= 60 && playerY + 20 >= 50 && playerY <= 60) {
+        if (player.playerX + 20 >= 49 && player.playerX <= 60 && player.playerY + 20 >= 50 && player.playerY <= 60) {
             // Colisión detectada
             JOptionPane.showMessageDialog(this, "¡Has ganado! ¡Has alcanzado la bandera!");
             System.exit(0);
@@ -445,8 +578,8 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             // Check if the player is touching the top of the platform
             if (y + 20 >= platformY && y + 20 <= platformY + 5) {
                 //System.out.println("Colliding with platform " + (platformIndex + 1));
-                playerState = PlayerState.values()[platformIndex];
-                System.out.println(playerState);
+                player.playerState = Player.PlayerState.values()[platformIndex];
+                System.out.println(player.playerState);
                 return true; // The player is touching the top of the platform
             }
             // Check if the player is within the bottom of the platform
@@ -522,7 +655,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         drawBresenhamLine(g, x0, x3, y0, y2, color);
     }
 
-    public void drawLine(Graphics g, int x0, int x1, int y0, int y1, boolean continuous, Color color) {
+    public void drawLine(Graphics g, int x0, int x1, int y0, int y1, boolean continuous, Color color, int mask) {
         int dx = Math.abs(x1 - x0);
         int dy = Math.abs(y1 - y0);
         int sx = x0 < x1 ? 1 : -1;
@@ -531,7 +664,6 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         int err2;
 
         int counter = 0;
-        int mask = 0b110000000000;
         int maskLength = Integer.toBinaryString(mask).length();
 
         while (x0 != x1 || y0 != y1) {
@@ -586,6 +718,24 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         for (int i = -(lineWidth / 2); i <= lineWidth / 2; i++) {
             putPixel(g, x + i, y, color); // Vertical segments
             putPixel(g, x, y + i, color); // Horizontal segments
+        }
+    }
+
+    public void drawCircumference(Graphics g, int centerX, int centerY, int radius, int lineWidth, Color color) {
+        // Calcular el grosor de la línea en píxeles
+        int halfWidth = lineWidth / 2;
+
+        // Iterar sobre cada punto en un cuadrado que rodea la circunferencia
+        for (int y = centerY - radius - halfWidth; y <= centerY + radius + halfWidth; y++) {
+            for (int x = centerX - radius - halfWidth; x <= centerX + radius + halfWidth; x++) {
+                // Calcular la distancia del punto actual al centro de la circunferencia
+                double distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+
+                // Verificar si el punto está dentro del grosor de la línea
+                if (Math.abs(distance - radius) <= halfWidth) {
+                    putPixel(g, x, y, color);
+                }
+            }
         }
     }
 
@@ -739,7 +889,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         }
     }
 
-    public void floodFill(Graphics g, int x, int y, Color targetColor, Color fillColor) {
+    public void floodFill(Graphics g, int x, int y, Color fillColor, Color borderColor) {
         Queue<Point> queue = new ArrayDeque<>();
         queue.add(new Point(x, y));
 
@@ -748,18 +898,25 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             int px = point.x;
             int py = point.y;
 
-            if (px >= 0 && px < getWidth() && py >= 0 && py < getHeight() &&
-                    bufferImage.getRGB(px, py) == targetColor.getRGB()) {
-                putPixel(g, px, py, fillColor);
+            // Verificar si el píxel está dentro de los límites
+            if (px >= 0 && px < getWidth() && py >= 0 && py < getHeight()) {
+                int pixelColor = bufferEscenario.getRGB(px, py);
 
-                // Revisar los vecinos
-                queue.add(new Point(px + 1, py));
-                queue.add(new Point(px - 1, py));
-                queue.add(new Point(px, py + 1));
-                queue.add(new Point(px, py - 1));
+                // Verificar si el píxel no tiene el color de borde
+                if (pixelColor != borderColor.getRGB()) {
+                    // Dibujar el píxel con el color de relleno
+                    putPixel(g, px, py, fillColor);
+
+                    // Agregar los vecinos a la cola
+                    queue.add(new Point(px + 1, py));
+                    queue.add(new Point(px - 1, py));
+                    queue.add(new Point(px, py + 1));
+                    queue.add(new Point(px, py - 1));
+                }
             }
         }
     }
+
 
 
 }

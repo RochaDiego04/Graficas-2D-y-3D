@@ -16,6 +16,8 @@ public class Barrel {
     public boolean reachedSixthVerticalLine = false;
     public boolean reachedSeventhhLine = false;
 
+    public DonkeyKongGameV2 ventana;
+
     public enum BarrelState {
         FIRST_LINE,
         SECOND_LINE_VERTICAL,
@@ -26,10 +28,11 @@ public class Barrel {
         SEVENTH_LINE
     }
 
-    public Barrel(int BARREL_MOVE_SPEED) {
+    public Barrel(int BARREL_MOVE_SPEED, DonkeyKongGameV2 ventana) {
         this.barrelVisible = false;
         this.barrelState = BarrelState.FIRST_LINE;
         this.BARREL_MOVE_SPEED = BARREL_MOVE_SPEED;
+        this.ventana = ventana;
     }
 
     public void moveBarrel() {
@@ -188,7 +191,7 @@ public class Barrel {
             // Comprueba si el barril colisiona con el jugador
             if (barrelX + 20 >= playerX && barrelX <= playerX + 20 && barrelY + 20 >= playerY && barrelY <= playerY + 20) {
                 // Colisión detectada
-                System.out.println("Colision");
+                JOptionPane.showMessageDialog(this.ventana, "¡Has colisionado con un barril!");
                 System.exit(0);
             }
             // Si el barril llega al suelo o sale de los limites en X, desaparece

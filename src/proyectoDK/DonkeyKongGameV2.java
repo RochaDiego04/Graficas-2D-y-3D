@@ -1,13 +1,10 @@
 package proyectoDK;
 
-import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -41,19 +38,19 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     public static final Color BARRELS2 = new Color(63, 36, 31);
     public static final Color BARRELS3 = new Color(128, 79, 74);
 
-    // DIMENSIONES DE VENTANA
+    // WINDOW DIMENSIONS
     private static final int WIDTH = 800;
     private static final int HEIGHT = 500;
 
-    // Platforms
+    // PLATFORMS
     private ArrayList<int[]> platforms;
 
-    // Ladders
+    // LADDERS
     private ArrayList<int[]> ladders;
 
     private Player player;
 
-    // Barrel
+    // BARRELS
     private List<Barrel> barrels;
     int NUMBER_BARRELS = 4;
 
@@ -65,7 +62,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     private Graphics graPixel;
     private Graphics gEscenario;
 
-    // Definición de códigos de región
+    // REGION CODES
     private static final int INSIDE = 0; // 0000
     private static final int LEFT = 1;   // 0001
     private static final int RIGHT = 2;  // 0010
@@ -95,9 +92,9 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         player = new Player(this);
 
         ladders = new ArrayList<>();
-        ladders.add(new int[]{610, 60, 20, 110}); // Escalera 1
-        ladders.add(new int[]{230, 150, 20, 110}); // Escalera 2
-        ladders.add(new int[]{630, 240, 20, 220}); // Escalera 3  x, y , width, height
+        ladders.add(new int[]{610, 60, 20, 110}); // Stair 1
+        ladders.add(new int[]{230, 150, 20, 110}); // Stair 2
+        ladders.add(new int[]{630, 240, 20, 220}); // Stair 3  x, y , width, height
 
         platforms = new ArrayList<>();
         platforms.add(new int[]{0, 80, 700, 20}); // x, y, width, height
@@ -108,28 +105,29 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         isRunning = true;
         bufferImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 
+        // Buffer for non-static shapes
         buffer = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
-        graPixel = buffer.getGraphics(); // Inicializa graPixel aquí
+        graPixel = buffer.getGraphics();
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setVisible(true);
     }
 
     public void run() {
-        // Dibujar buffer con imagen de fondo
+        // Buffer for static shapes (background)
         bufferEscenario = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
         gEscenario = bufferEscenario.getGraphics();
 
         drawScene(gEscenario);
 
         while (isRunning) {
-            // Actualizacion de movimiento de barril
+            // Update barrels position
             for (Barrel barrel : barrels) {
                 barrel.logicMoveBarrel(player.playerX, player.playerY);
             }
-            // Actualizacion de movimiento de jugador
+            // Update player position
             logicMovePlayer();
-            // Verificar si el jugador alcanza la bandera
+            // Verify if player reached the flag
             logicPlayerWins();
 
             repaint();
@@ -146,33 +144,30 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     @Override
     public void update(Graphics graphics) {
         graphics.setClip(0, 0, getWidth(), getHeight());
-        buffer = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
-        graPixel = buffer.getGraphics();
         graPixel.setClip(0, 0, getWidth(), getHeight());
         graphics.drawImage(bufferEscenario, 0, 0, this);
     }
 
     @Override
     public void repaint() {
-        // Dibuja buffer del fondo con el escenario
+        // Draw background image on buffer
         graPixel.drawImage(bufferEscenario, 0, 0, null);
 
-        // Dibuja al jugador
+        // Draw the player on buffer
         int[] xPoints = {player.playerX, player.playerX + 20, player.playerX + 20, player.playerX};
         int[] yPoints = {player.playerY, player.playerY, player.playerY + 20, player.playerY + 20};
         fillPolygonScanLine(graPixel,xPoints, yPoints, Color.white);
-        drawRectangle(graPixel,  player.playerX, player.playerY, player.playerX + 20, player.playerY + 20, Color.red);
+        drawRectangle(graPixel,  player.playerX, player.playerY, player.playerX + 20, player.playerY + 20, Color.CYAN);
 
-        // Dibuja el barril si está visible
+        // Draw the barrel if visible, on buffer
         for (Barrel barrel : barrels) {
             if (barrel.barrelVisible) {
                 drawCircumference(graPixel,barrel.barrelX + 10, barrel.barrelY + 10,8,4,BARRELS2);
-                drawCircumference(graPixel,barrel.barrelX + 10, barrel.barrelY + 10,3,2,BARRELS1);
-                drawBresenhamCircumference(graPixel, barrel.barrelX + 10, barrel.barrelY + 10, 6, BARRELS3);
+                drawCircumference(graPixel,barrel.barrelX + 10, barrel.barrelY + 10,4,2,BARRELS1);
             }
         }
 
-        // Dibuja el buffer en la pantalla
+        // Paint the buffer on screen
         Graphics g = getGraphics();
         if (g != null) {
             g.drawImage(buffer, 0, 0, null);
@@ -180,12 +175,13 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         }
     }
 
-    /****************** DIBUJOS COMPUESTOS *******************/
+    /****************** COMPOSITE DRAWINGS *******************/
     public void drawScene(Graphics gEscenario) {
         drawBackground(gEscenario);
         drawFlag(gEscenario);
         drawPlatforms(gEscenario);
         drawStairs(gEscenario);
+        drawBarrelGenerator(gEscenario);
     }
 
     public void drawBackground(Graphics gEscenario) {
@@ -212,7 +208,6 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     }
 
     public void drawSky(Graphics gEscenario) {
-        // CIELO
         int[] xPoints = {0, getWidth(), getWidth(), 0};
         int[] yPoints = {30, 30, 150, 150};
         fillPolygonScanLine(gEscenario,xPoints, yPoints, SKY1);
@@ -232,10 +227,18 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         xPoints = new int[]{0, getWidth(), getWidth(), 0};
         yPoints = new int[]{280, 280, 345, 345};
         fillPolygonScanLine(gEscenario,xPoints, yPoints, SKY5);
+
+        // STARTS
+        int min=0;
+        int maxY = 350;
+        int maxX = 800;
+        for(int i = 0 ; i<200;i++){
+            putPixel(gEscenario, (int) (Math.random() * (maxX - min + 1)) + min,(int) (Math.random() * (maxY - min + 1)) + min,Color.white);
+        }
     }
 
     public void drawGrass(Graphics gEscenario) {
-        // PASTO
+        // GRASS
         int[] xPoints = {0, getWidth(), getWidth(), 0};
         int[] yPoints = {345, 345, 350, 350};
         fillPolygonScanLine(gEscenario,xPoints, yPoints, GRASS2);
@@ -244,7 +247,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         yPoints = new int[]{350, 350, 355, 355};
         fillPolygonScanLine(gEscenario,xPoints, yPoints, GRASS3);
 
-        // SUELO
+        // UNDERGROUND
         xPoints = new int[]{0, getWidth(), getWidth(), 0};
         yPoints = new int[]{355, 355, 365, 365};
         fillPolygonScanLine(gEscenario,xPoints, yPoints, GROUND1);
@@ -261,7 +264,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         yPoints = new int[]{400, 400, 500, 500};
         fillPolygonScanLine(gEscenario,xPoints, yPoints, GROUND4);
 
-        // DETALLES PASTO
+        // GRASS DETAILS
         for(int y = 345; y < 350; y++) {
             drawLine(gEscenario,0, 800, y, y, false , GRASS1, 0b111111011111);
         }
@@ -299,12 +302,12 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
     public void drawFlag(Graphics gEscenario) {
         drawBresenhamLine(gEscenario, 49, 49, 50, 80, Color.white);
-        drawRightTriangle(gEscenario, 50, 60, 60, 60, 50,50, Color.white);
-        floodFill(gEscenario, 55, 56, Color.white, Color.white);
+        drawRightTriangle(gEscenario, 50, 60, 60, 60, 50,50, Color.red);
+        floodFill(gEscenario, 55, 56, Color.red, Color.red);
     }
 
     public void drawPlatforms(Graphics gEscenario) {
-        // plataforma 1
+        // platform 1
         int yStart = 80;
         int yEnd = 90;
         int startX = 0;
@@ -323,14 +326,14 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             endX += 20;
         }
 
-        drawBresenhamLine(gEscenario, 0, 700, 80, 80, PLATFORM1); // x0, x1, y0. y1
-        drawBresenhamLine(gEscenario, 0, 700, 90, 90, PLATFORM1); // x0, x1, y0. y1
+        drawBresenhamLine(gEscenario, 0, 700, 80, 80, PLATFORM1);
+        drawBresenhamLine(gEscenario, 0, 700, 90, 90, PLATFORM1);
 
-        // plataforma 3
+        // plataform 3
         int yStart_Platform3 = 170;
         int yEnd_Platform3 = 180;
-        int startX_Platform3 = 70; // Empieza desde x = 70
-        int endX_Platform3 = 80; // Termina en x = 80, ya que se incrementará en el bucle
+        int startX_Platform3 = 70;
+        int endX_Platform3 = 80;
 
         drawBresenhamLine(gEscenario,800, 70, 171, 171, PLATFORM2); // shine of platforms
 
@@ -376,11 +379,11 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         int startX_Platform7 = 0;
         int endX_Platform7 = 10;
 
-        drawBresenhamLine(gEscenario,800, 0, 461, 461, PLATFORM2);
+        drawBresenhamLine(gEscenario,800, 0, 461, 461, PLATFORM2); // shine of platforms
 
         while (endX_Platform7 <= 800) {
-            drawBresenhamLine(gEscenario, startX_Platform7 + 2, endX_Platform7, yStart_Platform7, yEnd_Platform7, PLATFORM2);
-            drawBresenhamLine(gEscenario, endX_Platform7 + 2, endX_Platform7 + 10, yEnd_Platform7, yStart_Platform7, PLATFORM2);
+            drawBresenhamLine(gEscenario, startX_Platform7 + 2, endX_Platform7, yStart_Platform7, yEnd_Platform7, PLATFORM2); // shine of platforms
+            drawBresenhamLine(gEscenario, endX_Platform7 + 2, endX_Platform7 + 10, yEnd_Platform7, yStart_Platform7, PLATFORM2); // shine of platforms
 
             drawBresenhamLine(gEscenario, startX_Platform7, endX_Platform7, yStart_Platform7, yEnd_Platform7, PLATFORM1);
             drawBresenhamLine(gEscenario, endX_Platform7, endX_Platform7 + 10, yEnd_Platform7, yStart_Platform7, PLATFORM1);
@@ -393,8 +396,8 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     }
 
     public void drawStairs(Graphics gEscenario) {
-        // Dibuja escalera 1
-        //drawBresenhamLine(630, 630, 80, 170, Color.blue);
+        // draw stair 1
+        // drawBresenhamLine(630, 630, 80, 170, Color.blue);
         drawLine(gEscenario,616, 616, 80, 170, 3, STAIRS2);
         drawLine(gEscenario,615, 615, 80, 170, 3, STAIRS1);
         for (int i = 620; i <= 640; i++) {
@@ -403,8 +406,8 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         drawLine(gEscenario,646, 646, 80, 170, 3, STAIRS2);
         drawLine(gEscenario,645, 645, 80, 170, 3, STAIRS1);
 
-        // Dibuja escalera 2
-        //drawBresenhamLine(250, 250, 170, 260, Color.red);
+        // draw stair 2
+        // drawBresenhamLine(250, 250, 170, 260, Color.red);
         drawLine(gEscenario,236, 236, 170, 260, 3, STAIRS2);
         drawLine(gEscenario,235, 235, 170, 260, 3, STAIRS1);
         for (int i = 240; i <= 260; i++) {
@@ -413,7 +416,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         drawLine(gEscenario,266, 266, 170, 260, 3, STAIRS2);
         drawLine(gEscenario,265, 265, 170, 260, 3, STAIRS1);
 
-        // Dibuja escalera 3
+        // draw stair 3
         // drawBresenhamLine(650, 650, 260, 460, Color.blue); Linea original
         drawLine(gEscenario,636, 636, 260, 460, 3, STAIRS2);
         drawLine(gEscenario,635, 635, 260, 460, 3, STAIRS1);
@@ -424,25 +427,47 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         drawLine(gEscenario,665, 665, 260, 460, 3, STAIRS1);
     }
 
-    /****************** CREACION DE BARRILES *******************/
+    public void drawBarrelGenerator(Graphics gEscenario) {
+        drawEllipse(gEscenario, 120, 78, 12, 3, BARRELS2);
+        floodFill(gEscenario, 120, 78, BARRELS2, BARRELS2);
+
+        drawRectangle(gEscenario, 108, 60, 132, 78, BARRELS2);
+        floodFill(gEscenario, 110, 65, BARRELS2, BARRELS2);
+
+
+        drawEllipse(gEscenario, 120, 60, 12, 3, BARRELS1);
+        floodFill(gEscenario, 120, 60, BARRELS1, BARRELS1);
+
+        drawEllipse(gEscenario, 120, 60, 9, 2, Color.BLACK);
+        floodFill(gEscenario, 120, 60, Color.BLACK, Color.BLACK);
+
+        drawBresenhamLine(gEscenario, 108, 108, 61, 79, BARRELS3);
+        drawBresenhamLine(gEscenario, 109, 109, 62, 80, BARRELS3);
+        drawBresenhamLine(gEscenario, 110, 110, 63, 81, BARRELS3);
+        drawBresenhamLine(gEscenario, 114, 114, 63, 81, BARRELS3);
+        drawBresenhamLine(gEscenario, 115, 115, 63, 81, BARRELS3);
+        drawBresenhamLine(gEscenario, 119, 119, 64, 82, BARRELS3);
+    }
+
+    /****************** BARREL CREATION *******************/
     private void createRandomBarrels() {
         Random random = new Random();
-        // Crear dos barriles con velocidad entre 3 y 4
+        // Create two barrels with speed from 3 to 4
         for (int i = 0; i < NUMBER_BARRELS / 2; i++) {
-            int randomSpeed = random.nextInt(2) + 3; // Generar velocidad aleatoria entre 3 y 4
-            Barrel barrel = new Barrel(randomSpeed, this); // Crear barril con velocidad aleatoria
-            barrels.add(barrel); // Agregar barril a la lista
+            int randomSpeed = random.nextInt(2) + 3;
+            Barrel barrel = new Barrel(randomSpeed, this); // Pass randomSpeed to the constructor
+            barrels.add(barrel); // Add barrel to list
         }
-        // Crear dos barriles con velocidad entre 1 y 3
+        // Create two barrels with speed from 1 to 3
         for (int i = 0; i < NUMBER_BARRELS / 2; i++) {
-            int randomSpeed = random.nextInt(3) + 1; // Generar velocidad aleatoria entre 1 y 3
-            Barrel barrel = new Barrel(randomSpeed, this); // Crear barril con velocidad aleatoria
-            barrels.add(barrel); // Agregar barril a la lista
+            int randomSpeed = random.nextInt(3) + 1;
+            Barrel barrel = new Barrel(randomSpeed, this);
+            barrels.add(barrel);
         }
     }
 
 
-    /****************** MOVIMIENTO DEL JUGADOR *******************/
+    /****************** PLAYER MOVEMENT *******************/
 
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
@@ -450,44 +475,42 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             player.playerVx = -player.MOVE_SPEED;
         } else if (keyCode == KeyEvent.VK_RIGHT && player.playerX < WIDTH - 20) {
             player.playerVx = player.MOVE_SPEED;
-        } else if (keyCode == KeyEvent.VK_UP && isOnLadder()) { // Si el jugador está en una escalera
-            player.playerVy = -player.MOVE_SPEED; // Mueve al jugador hacia arriba
-        } else if (keyCode == KeyEvent.VK_UP && (player.playerY == HEIGHT - 60 || player.playerY == 260 - 20 || player.playerY == 170 - 20 || player.playerY == 80 - 20)) { // Permite saltar si el jugador está en el suelo o en las plataformas
-            player.playerVy = -player.JUMP_SPEED; // Inicia un salto
+        } else if (keyCode == KeyEvent.VK_UP && isOnLadder()) { // If player is on ladder
+            player.playerVy = -player.MOVE_SPEED; // Move the player on Y axis
+        } else if (keyCode == KeyEvent.VK_UP && (player.playerY == 440 || player.playerY == 240 || player.playerY == 150 || player.playerY == 60)) { // Allow jumping if player on any platform
+            player.playerVy = -player.JUMP_SPEED;
         }
     }
 
     public void keyReleased(KeyEvent e) {
         int keyCode = e.getKeyCode();
         if (keyCode == KeyEvent.VK_LEFT || keyCode == KeyEvent.VK_RIGHT) {
-            player.playerVx = 0; // Detiene el movimiento horizontal cuando se suelta la tecla
+            player.playerVx = 0; // Stop player movement on X axis if key released
         }
     }
 
     public void keyTyped(KeyEvent e) {
-        // No necesitamos implementar este método, pero debemos proporcionar una implementación vacía para KeyListener
     }
 
     public void logicMovePlayer() {
-        // Actualización de la posición vertical del jugador
+        // Update vertical position
         player.playerY += player.playerVy;
-        boolean isColliding = false; // Variable para mantener el estado de colisión
 
-        // Comprobación de colisiones con las plataformas
-        if (player.playerVy > 0) { // Si el jugador está moviéndose hacia abajo
+        //Checking for collisions with platforms
+        if (player.playerVy > 0) { // If player moving down
             if (isCollidingWithPlatform(player.playerX, player.playerY + 1, 0) ||
                     isCollidingWithPlatform(player.playerX, player.playerY + 1, 1) ||
                     isCollidingWithPlatform(player.playerX, player.playerY + 1, 2) ||
                     isCollidingWithPlatform(player.playerX, player.playerY + 1, 3)) {
-                // Detiene el movimiento vertical hacia abajo
+                // Stop vertical movement
                 player.playerVy = 0;
             }
-        } else if (player.playerVy < 0) { // Si el jugador está moviéndose hacia arriba
+        } else if (player.playerVy < 0) { // If player moving up
             if (isCollidingWithPlatform(player.playerX, player.playerY, 0) ||
                     isCollidingWithPlatform(player.playerX, player.playerY, 1) ||
                     isCollidingWithPlatform(player.playerX, player.playerY, 2) ||
                     isCollidingWithPlatform(player.playerX, player.playerY, 3)) {
-                // Detiene el movimiento vertical hacia arriba
+                // Stop vertical movement
                 player.playerVy = 0;
             }
         }
@@ -546,7 +569,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     private boolean isOnLadder() {
         for (int[] ladder : ladders) {
             if (player.playerX >= ladder[0] && player.playerX <= ladder[0] + ladder[2] && player.playerY >= ladder[1] && player.playerY <= ladder[1] + ladder[3]) {
-                System.out.println("Esta en escalera");
+                //System.out.println("Esta en escalera");
                 return true;
             }
         }
@@ -554,7 +577,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     }
 
     public void logicPlayerWins() {
-// Comprueba si el jugador colisiona con la bandera
+        // Checking for collisions with flag
         if (player.playerX + 20 >= 49 && player.playerX <= 60 && player.playerY + 20 >= 50 && player.playerY <= 60) {
             // Colisión detectada
             JOptionPane.showMessageDialog(this, "¡Has ganado! ¡Has alcanzado la bandera!");
@@ -566,7 +589,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         drawRightTriangle(gEscenario, 50, 60, 60, 60, 50,50, Color.white);
     }
 
-    /* COLISIONES */
+    /* COLISIONS */
     private boolean isCollidingWithPlatform(int x, int y, int platformIndex) {
         int platformX = platforms.get(platformIndex)[0];
         int platformY = platforms.get(platformIndex)[1];
@@ -598,7 +621,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     }
 
 
-    /****************** METODOS DE DIBUJO *******************/
+    /****************** DRAWING METHODS *******************/
     private void putPixel(Graphics g, int x, int y, Color color) {
         bufferImage.setRGB(0, 0, color.getRGB());
         g.drawImage(bufferImage, x, y, this);
@@ -645,11 +668,8 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     }
 
     public void drawRightTriangle(Graphics g, int x0, int y0, int x1, int y1, int x2, int y2, Color color) {
-        // Calcular el punto de la esquina superior derecha
         int x3 = x0 + (x2 - x0);
-        int y3 = y1;
 
-        // Dibujar las tres líneas que forman el triángulo rectángulo
         drawBresenhamLine(g, x0, x1, y0, y1, color);
         drawBresenhamLine(g, x1, x2, y1, y2, color);
         drawBresenhamLine(g, x0, x3, y0, y2, color);
@@ -696,13 +716,10 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         int y = y0;
 
         while (true) {
-            // Draw the current point with the specified line width
             drawPixelWithWidth(g, x, y, lineWidth, color);
 
-            // Check if we have reached the end point
             if (x == x1 && y == y1) break;
 
-            // Calculate the next point
             err2 = 2 * err;
             if (err2 > -dy) {
                 err -= dy;
@@ -716,22 +733,18 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     }
     private void drawPixelWithWidth(Graphics g, int x, int y, int lineWidth, Color color) {
         for (int i = -(lineWidth / 2); i <= lineWidth / 2; i++) {
-            putPixel(g, x + i, y, color); // Vertical segments
-            putPixel(g, x, y + i, color); // Horizontal segments
+            putPixel(g, x + i, y, color);
+            putPixel(g, x, y + i, color);
         }
     }
 
     public void drawCircumference(Graphics g, int centerX, int centerY, int radius, int lineWidth, Color color) {
-        // Calcular el grosor de la línea en píxeles
         int halfWidth = lineWidth / 2;
 
-        // Iterar sobre cada punto en un cuadrado que rodea la circunferencia
         for (int y = centerY - radius - halfWidth; y <= centerY + radius + halfWidth; y++) {
             for (int x = centerX - radius - halfWidth; x <= centerX + radius + halfWidth; x++) {
-                // Calcular la distancia del punto actual al centro de la circunferencia
                 double distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
 
-                // Verificar si el punto está dentro del grosor de la línea
                 if (Math.abs(distance - radius) <= halfWidth) {
                     putPixel(g, x, y, color);
                 }
@@ -855,11 +868,9 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
     public void fillPolygonScanLine(Graphics g, int[] xPoints, int[] yPoints, Color color) {
 
-        // Calcular el punto mínimo en X,Y
         int minY = Arrays.stream(yPoints).min().getAsInt();
         int maxY = Arrays.stream(yPoints).max().getAsInt();
 
-        // Iterar en el eje vertical
         for (int y = minY; y <= maxY; y++) {
             List<Integer> intersections = new ArrayList<>();
             for (int i = 0; i < xPoints.length; i++) {
@@ -898,16 +909,12 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             int px = point.x;
             int py = point.y;
 
-            // Verificar si el píxel está dentro de los límites
             if (px >= 0 && px < getWidth() && py >= 0 && py < getHeight()) {
                 int pixelColor = bufferEscenario.getRGB(px, py);
 
-                // Verificar si el píxel no tiene el color de borde
                 if (pixelColor != borderColor.getRGB()) {
-                    // Dibujar el píxel con el color de relleno
                     putPixel(g, px, py, fillColor);
 
-                    // Agregar los vecinos a la cola
                     queue.add(new Point(px + 1, py));
                     queue.add(new Point(px - 1, py));
                     queue.add(new Point(px, py + 1));

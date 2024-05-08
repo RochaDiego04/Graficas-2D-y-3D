@@ -34,6 +34,12 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
 
     public static final Color MOON = new Color(203, 202, 202);
     public static final Color MOONDETAILS = new Color(183, 183, 183);
+
+    public static final Color CHARACTER_FACE = new Color(12, 144, 150);
+    public static final Color CHARACTER_LEGS_BEAK = new Color(249, 175, 59);
+    public static final Color CHARACTER_CLOTHING = new Color(87, 37, 46);
+    public static final Color CHARACTER_CLOTHING2 = new Color(190, 172, 122);
+
     public static final Color BARRELS1 = new Color(93, 53, 45);
     public static final Color BARRELS2 = new Color(63, 36, 31);
     public static final Color BARRELS3 = new Color(128, 79, 74);
@@ -49,10 +55,12 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
     private ArrayList<int[]> ladders;
 
     private Player player;
+    int[] xPoints;
+    int[] yPoints;
 
     // BARRELS
     private List<Barrel> barrels;
-    int NUMBER_BARRELS = 4;
+    int NUMBER_BARRELS = 6;
 
     // THREAD AND BUFFER
     private boolean isRunning;
@@ -117,7 +125,6 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         // Buffer for static shapes (background)
         bufferEscenario = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
         gEscenario = bufferEscenario.getGraphics();
-
         drawScene(gEscenario);
 
         while (isRunning) {
@@ -153,11 +160,7 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
         // Draw background image on buffer
         graPixel.drawImage(bufferEscenario, 0, 0, null);
 
-        // Draw the player on buffer
-        int[] xPoints = {player.playerX, player.playerX + 20, player.playerX + 20, player.playerX};
-        int[] yPoints = {player.playerY, player.playerY, player.playerY + 20, player.playerY + 20};
-        fillPolygonScanLine(graPixel,xPoints, yPoints, Color.white);
-        drawRectangle(graPixel,  player.playerX, player.playerY, player.playerX + 20, player.playerY + 20, Color.CYAN);
+        drawCharacter(graPixel);
 
         // Draw the barrel if visible, on buffer
         for (Barrel barrel : barrels) {
@@ -173,6 +176,60 @@ public class DonkeyKongGameV2 extends JFrame implements Runnable, KeyListener {
             g.drawImage(buffer, 0, 0, null);
             g.dispose();
         }
+    }
+
+    public void drawCharacter(Graphics graPixel) {
+        // FACE
+        xPoints = new int[]{player.playerX + 1, player.playerX + 19, player.playerX + 19, player.playerX + 1};
+        yPoints = new int[]{player.playerY, player.playerY, player.playerY + 14, player.playerY + 14};
+        fillPolygonScanLine(graPixel,xPoints, yPoints, CHARACTER_FACE);
+
+        // BEAK
+        xPoints = new int[]{player.playerX + 6, player.playerX + 14, player.playerX + 14, player.playerX + 6};
+        yPoints = new int[]{player.playerY + 8, player.playerY + 8, player.playerY + 10, player.playerY + 10};
+        fillPolygonScanLine(graPixel,xPoints, yPoints, CHARACTER_LEGS_BEAK);
+
+        // EYES
+        drawBresenhamLine(graPixel, player.playerX + 6, player.playerX + 6, player.playerY + 4,  player.playerY + 6, Color.BLACK);
+        drawBresenhamLine(graPixel, player.playerX + 7, player.playerX + 7, player.playerY + 4,  player.playerY + 6, Color.BLACK);
+
+        drawBresenhamLine(graPixel, player.playerX + 13, player.playerX + 13, player.playerY + 4,  player.playerY + 6, Color.BLACK);
+        drawBresenhamLine(graPixel, player.playerX + 14, player.playerX + 14, player.playerY + 4,  player.playerY + 6, Color.BLACK);
+
+        // CLOTHING
+        xPoints = new int[]{player.playerX + 1, player.playerX + 19, player.playerX + 19, player.playerX + 1};
+        yPoints = new int[]{player.playerY + 14, player.playerY + 14, player.playerY + 16, player.playerY + 16};
+        fillPolygonScanLine(graPixel,xPoints, yPoints, Color.white);
+
+        xPoints = new int[]{player.playerX + 1, player.playerX + 19, player.playerX + 19, player.playerX + 1};
+        yPoints = new int[]{player.playerY + 16, player.playerY + 16, player.playerY + 18, player.playerY + 18};
+        fillPolygonScanLine(graPixel,xPoints, yPoints, CHARACTER_CLOTHING);
+
+        // WINGS
+        xPoints = new int[]{player.playerX, player.playerX + 3, player.playerX + 3, player.playerX};
+        yPoints = new int[]{player.playerY + 6, player.playerY + 6, player.playerY + 16, player.playerY + 16};
+        fillPolygonScanLine(graPixel,xPoints, yPoints, CHARACTER_CLOTHING);
+
+        xPoints = new int[]{player.playerX + 17, player.playerX + 20, player.playerX + 20, player.playerX + 17};
+        yPoints = new int[]{player.playerY + 6, player.playerY + 6, player.playerY + 10, player.playerY + 10};
+        fillPolygonScanLine(graPixel,xPoints, yPoints, CHARACTER_CLOTHING);
+
+        xPoints = new int[]{player.playerX, player.playerX + 3, player.playerX + 3, player.playerX};
+        yPoints = new int[]{player.playerY + 10, player.playerY + 10, player.playerY + 16, player.playerY + 16};
+        fillPolygonScanLine(graPixel,xPoints, yPoints, CHARACTER_CLOTHING2);
+
+        xPoints = new int[]{player.playerX + 17, player.playerX + 20, player.playerX + 20, player.playerX + 17};
+        yPoints = new int[]{player.playerY + 10, player.playerY + 10, player.playerY + 16, player.playerY + 16};
+        fillPolygonScanLine(graPixel,xPoints, yPoints, CHARACTER_CLOTHING2);
+
+        // LEGS
+        xPoints = new int[]{player.playerX + 5, player.playerX + 7, player.playerX + 7, player.playerX + 5};
+        yPoints = new int[]{player.playerY + 18, player.playerY + 18, player.playerY + 20, player.playerY + 20};
+        fillPolygonScanLine(graPixel,xPoints, yPoints, CHARACTER_LEGS_BEAK);
+
+        xPoints = new int[]{player.playerX + 13, player.playerX + 15, player.playerX + 15, player.playerX + 13};
+        yPoints = new int[]{player.playerY + 18, player.playerY + 18, player.playerY + 20, player.playerY + 20};
+        fillPolygonScanLine(graPixel,xPoints, yPoints, CHARACTER_LEGS_BEAK);
     }
 
     /****************** COMPOSITE DRAWINGS *******************/

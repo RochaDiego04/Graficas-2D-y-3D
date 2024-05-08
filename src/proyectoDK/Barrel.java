@@ -82,6 +82,11 @@ public class Barrel {
     }
 
     private void resetBarrel() {
+        // Every time the barrel resets, it could increase its speed
+        var randomNum = Math.random();
+        if (randomNum < 0.33) {
+            this.BARREL_MOVE_SPEED += 1;
+        }
         barrelX = 120;
         barrelY = 60;
         barrelVisible = true;

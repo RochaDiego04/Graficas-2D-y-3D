@@ -17,7 +17,7 @@ public class CuboTraslacion extends JFrame implements Runnable, KeyListener {
     private BufferedImage bufferEscenario;
     private Graphics graPixel;
     private Graphics gEscenario;
-    private int cubeX = 200, cubeY = 200;
+    private int cubeX = 200, cubeY = 200, cubeZ = 20;
     private int MOVE_SPEED = 5;
     private int WIDTH = 700;
     private int HEIGHT = 700;
@@ -74,7 +74,7 @@ public class CuboTraslacion extends JFrame implements Runnable, KeyListener {
         // Draw background image on buffer
         graPixel.drawImage(bufferEscenario, 0, 0, null);
 
-        drawCube(graPixel,  new int[]{cubeX, cubeY, 20}, 10, Color.RED); // Punto inicial del cubo, tambien actualiza la posicion en (x,y)
+        drawCube(graPixel,  new int[]{cubeX, cubeY, cubeZ}, 10, Color.RED); // Punto inicial del cubo, tambien actualiza la posicion en (x,y)
 
         // Paint the buffer on screen
         Graphics g = getGraphics();
@@ -99,17 +99,20 @@ public class CuboTraslacion extends JFrame implements Runnable, KeyListener {
     /****************** CUBE MOVEMENT *******************/
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
-        if (keyCode == KeyEvent.VK_LEFT && cubeX > 0) {
+        if (keyCode == KeyEvent.VK_LEFT) {
             cubeX -= MOVE_SPEED;
-        } else if (keyCode == KeyEvent.VK_RIGHT && cubeX < getWidth() - 20) {
+        } else if (keyCode == KeyEvent.VK_RIGHT) {
             cubeX += MOVE_SPEED;
-        } else if (keyCode == KeyEvent.VK_UP && cubeY > 0) {
+        } else if (keyCode == KeyEvent.VK_UP) {
             cubeY -= MOVE_SPEED;
-        } else if (keyCode == KeyEvent.VK_DOWN && cubeY < getHeight() - 20) {
+        } else if (keyCode == KeyEvent.VK_DOWN) {
             cubeY += MOVE_SPEED;
+        } else if (keyCode == KeyEvent.VK_W) {
+            cubeZ -= MOVE_SPEED;
+        } else if (keyCode == KeyEvent.VK_S) {
+            cubeZ += MOVE_SPEED;
         }
     }
-
     public void keyReleased(KeyEvent e) {}
 
     public void keyTyped(KeyEvent e) {}

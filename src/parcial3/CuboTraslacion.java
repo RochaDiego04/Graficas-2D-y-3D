@@ -188,7 +188,7 @@ public class CuboTraslacion extends JFrame implements Runnable, KeyListener {
             int y0 = vertices[edge[0]][1];
             int x1 = vertices[edge[1]][0];
             int y1 = vertices[edge[1]][1];
-            drawBresenhamLine(g, x0, y0, x1, y1, color);  // Usando el método correcto
+            drawBresenhamLine(g, x0, y0, x1, y1, color);
         }
     }
 

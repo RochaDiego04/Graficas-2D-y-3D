@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 
-public class CuboRotacion extends JFrame implements Runnable, KeyListener {
+public class CuboRotacionAutomatica extends JFrame implements Runnable, KeyListener {
     private boolean isRunning;
     private BufferedImage bufferImage;
     private BufferedImage buffer;
@@ -23,9 +23,9 @@ public class CuboRotacion extends JFrame implements Runnable, KeyListener {
     private final int size = 50; // Size of the cube
     private double[][] vertices;
 
-    public CuboRotacion() {
+    public CuboRotacionAutomatica() {
         setSize(WIDTH, HEIGHT);
-        setTitle("Cubo Perspectiva con movimiento y rotacion");
+        setTitle("Cubo Perspectiva con movimiento automatico");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         addKeyListener(this);
@@ -49,6 +49,11 @@ public class CuboRotacion extends JFrame implements Runnable, KeyListener {
         drawScene(gEscenario);
 
         while (isRunning) {
+            // Increment the rotation angles for continuous rotation
+            angleX += Math.toRadians(1);
+            angleY += Math.toRadians(1);
+            angleZ += Math.toRadians(1);
+
             repaint();
             try {
                 Thread.sleep(10);
@@ -117,22 +122,22 @@ public class CuboRotacion extends JFrame implements Runnable, KeyListener {
                 cubeZ += MOVE_SPEED;
                 break;
             case KeyEvent.VK_Q:
-                angleX -= Math.toRadians(10);
+                angleX -= Math.toRadians(5);
                 break;
             case KeyEvent.VK_E:
-                angleX += Math.toRadians(10);
+                angleX += Math.toRadians(5);
                 break;
             case KeyEvent.VK_A:
-                angleY -= Math.toRadians(10);
+                angleY -= Math.toRadians(5);
                 break;
             case KeyEvent.VK_D:
-                angleY += Math.toRadians(10);
+                angleY += Math.toRadians(5);
                 break;
             case KeyEvent.VK_Z:
-                angleZ -= Math.toRadians(10);
+                angleZ -= Math.toRadians(5);
                 break;
             case KeyEvent.VK_C:
-                angleZ += Math.toRadians(10);
+                angleZ += Math.toRadians(5);
                 break;
         }
     }
@@ -287,7 +292,7 @@ public class CuboRotacion extends JFrame implements Runnable, KeyListener {
     }
 
     public static void main(String[] args) {
-        CuboRotacion cubo = new CuboRotacion();
+        CuboRotacionAutomatica cubo = new CuboRotacionAutomatica();
         Thread mainThread = new Thread(cubo);
         mainThread.start();
     }

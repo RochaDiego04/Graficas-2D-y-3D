@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 
-public class CuboRotacion extends JFrame implements Runnable, KeyListener {
+public class CuboParaleloRotacionAutomatica extends JFrame implements Runnable, KeyListener {
     private boolean isRunning;
     private BufferedImage bufferImage;
     private BufferedImage buffer;
@@ -23,7 +23,7 @@ public class CuboRotacion extends JFrame implements Runnable, KeyListener {
     private final int size = 50; // Size of the cube
     private double[][] vertices;
 
-    public CuboRotacion() {
+    public CuboParaleloRotacionAutomatica() {
         setSize(WIDTH, HEIGHT);
         setTitle("Cubo Perspectiva con movimiento y rotacion");
         setLocationRelativeTo(null);
@@ -49,6 +49,11 @@ public class CuboRotacion extends JFrame implements Runnable, KeyListener {
         drawScene(gEscenario);
 
         while (isRunning) {
+            // Increment the rotation angles for continuous rotation
+            angleX += Math.toRadians(1);
+            angleY += Math.toRadians(1);
+            angleZ += Math.toRadians(1);
+
             repaint();
             try {
                 Thread.sleep(10);
@@ -209,9 +214,9 @@ public class CuboRotacion extends JFrame implements Runnable, KeyListener {
     }
 
     private int[] project(double[] vertex) {
-        double factor = 500 / (500 + vertex[2]); // Adjust factor based on z-depth
-        int x = (int) (vertex[0] * factor) + WIDTH / 2; // Translate to center
-        int y = (int) (vertex[1] * factor) + HEIGHT / 2; // Translate to center
+        // Isometric projection
+        int x = (int) (vertex[0] - vertex[2]) + WIDTH / 2; // Translate to center
+        int y = (int) (vertex[1] - (vertex[2] / 2)) + HEIGHT / 2; // Translate to center
         return new int[]{x, y};
     }
 
@@ -287,7 +292,7 @@ public class CuboRotacion extends JFrame implements Runnable, KeyListener {
     }
 
     public static void main(String[] args) {
-        CuboRotacion cubo = new CuboRotacion();
+        CuboParaleloRotacionAutomatica cubo = new CuboParaleloRotacionAutomatica();
         Thread mainThread = new Thread(cubo);
         mainThread.start();
     }

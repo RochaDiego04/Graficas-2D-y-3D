@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 
-public class CuboTraslacion extends JFrame implements Runnable, KeyListener {
+public class CuboEscalamiento extends JFrame implements Runnable, KeyListener {
     private boolean isRunning;
     private BufferedImage bufferImage;
     private BufferedImage buffer;
@@ -17,18 +17,18 @@ public class CuboTraslacion extends JFrame implements Runnable, KeyListener {
     private Graphics gEscenario;
     private int cubeX = 200, cubeY = 200, cubeZ = 20;
     private int MOVE_SPEED = 5;
+    private double scaleFactor = 1.0;
     private int WIDTH = 700;
     private int HEIGHT = 700;
 
-    public CuboTraslacion() {
+    public CuboEscalamiento() {
         setSize(WIDTH, HEIGHT);
-        setTitle("Cubo con movimiento");
+        setTitle("Cubo con escalamiento");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         addKeyListener(this);
 
         isRunning = true;
-
 
         bufferImage = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 
@@ -54,7 +54,6 @@ public class CuboTraslacion extends JFrame implements Runnable, KeyListener {
         }
     }
 
-
     @Override
     public void update(Graphics graphics) {
         graphics.setClip(0, 0, getWidth(), getHeight());
@@ -72,7 +71,7 @@ public class CuboTraslacion extends JFrame implements Runnable, KeyListener {
         // Draw background image on buffer
         graPixel.drawImage(bufferEscenario, 0, 0, null);
 
-        drawCube(graPixel,  new int[]{cubeX, cubeY, cubeZ}, 10, Color.RED); // Punto inicial del cubo, tambien actualiza la posicion en (x,y)
+        drawCube(graPixel, new int[]{cubeX, cubeY, cubeZ}, 10, Color.RED); // Punto inicial del cubo, tambien actualiza la posicion en (x,y)
 
         // Paint the buffer on screen
         Graphics g = getGraphics();
@@ -90,9 +89,8 @@ public class CuboTraslacion extends JFrame implements Runnable, KeyListener {
     public void drawScene(Graphics gEscenario) {
         int[] xPoints = {0, getWidth(), getWidth(), 0};
         int[] yPoints = {30, 30, getHeight(), getHeight()};
-        fillPolygonScanLine(gEscenario,xPoints, yPoints, Color.BLACK);
+        fillPolygonScanLine(gEscenario, xPoints, yPoints, Color.BLACK);
     }
-
 
     /****************** CUBE MOVEMENT *******************/
     public void keyPressed(KeyEvent e) {
@@ -109,8 +107,13 @@ public class CuboTraslacion extends JFrame implements Runnable, KeyListener {
             cubeZ -= MOVE_SPEED;
         } else if (keyCode == KeyEvent.VK_S) {
             cubeZ += MOVE_SPEED;
+        } else if (keyCode == KeyEvent.VK_PLUS || keyCode == KeyEvent.VK_ADD) {
+            scaleFactor += 0.1;
+        } else if (keyCode == KeyEvent.VK_MINUS || keyCode == KeyEvent.VK_SUBTRACT) {
+            scaleFactor = Math.max(0.1, scaleFactor - 0.1);
         }
     }
+
     public void keyReleased(KeyEvent e) {}
 
     public void keyTyped(KeyEvent e) {}
@@ -143,7 +146,7 @@ public class CuboTraslacion extends JFrame implements Runnable, KeyListener {
     }
 
     public void drawCube(Graphics g, int[] Point, int size, Color color) {
-        size = size * 20;
+        size = (int) (size * 20 * scaleFactor); // Apply scaling factor to the size
         int[][] vertices = {
                 {Point[0], Point[1], Point[2]},
                 {Point[0] + size, Point[1], Point[2]},

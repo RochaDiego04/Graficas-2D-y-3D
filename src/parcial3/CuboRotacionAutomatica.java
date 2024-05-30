@@ -18,6 +18,7 @@ public class CuboRotacionAutomatica extends JFrame implements Runnable, KeyListe
     private double angleX = 0, angleY = 0, angleZ = 0; // Angles of rotation around each axis
     private int cubeX = 200, cubeY = 200, cubeZ = 200; // Position of the cube
     private int MOVE_SPEED = 5;
+    private double scaleFactor = 1.0;
     private final int WIDTH = 700;
     private final int HEIGHT = 700;
     private final int size = 50; // Size of the cube
@@ -49,7 +50,6 @@ public class CuboRotacionAutomatica extends JFrame implements Runnable, KeyListe
         drawScene(gEscenario);
 
         while (isRunning) {
-            // Increment the rotation angles for continuous rotation
             angleX += Math.toRadians(1);
             angleY += Math.toRadians(1);
             angleZ += Math.toRadians(1);
@@ -121,6 +121,12 @@ public class CuboRotacionAutomatica extends JFrame implements Runnable, KeyListe
             case KeyEvent.VK_S:
                 cubeZ += MOVE_SPEED;
                 break;
+            case KeyEvent.VK_PLUS: case KeyEvent.VK_ADD:
+                scaleFactor += 0.1;
+                break;
+            case KeyEvent.VK_MINUS: case KeyEvent.VK_SUBTRACT:
+                scaleFactor = Math.max(0.1, scaleFactor - 0.1);
+                break;
             case KeyEvent.VK_Q:
                 angleX -= Math.toRadians(5);
                 break;
@@ -167,7 +173,8 @@ public class CuboRotacionAutomatica extends JFrame implements Runnable, KeyListe
         double[][] rotatedVertices = new double[8][3];
 
         for (int i = 0; i < vertices.length; i++) {
-            double[] rotatedX = rotateX(vertices[i], angleX);
+            double[] scaledVertex = scale(vertices[i], scaleFactor);
+            double[] rotatedX = rotateX(scaledVertex, angleX);
             double[] rotatedXY = rotateY(rotatedX, angleY);
             double[] rotatedXYZ = rotateZ(rotatedXY, angleZ);
             rotatedVertices[i] = translate(rotatedXYZ, cubeX, cubeY, cubeZ);
@@ -179,6 +186,14 @@ public class CuboRotacionAutomatica extends JFrame implements Runnable, KeyListe
         }
 
         drawEdges(g, projectedVertices);
+    }
+
+    private double[] scale(double[] vertex, double factor) {
+        double[] scaled = new double[3];
+        scaled[0] = vertex[0] * factor;
+        scaled[1] = vertex[1] * factor;
+        scaled[2] = vertex[2] * factor;
+        return scaled;
     }
 
     private double[] rotateX(double[] vertex, double angle) {

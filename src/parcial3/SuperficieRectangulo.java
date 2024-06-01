@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 
-public class CurvaExplicita extends JFrame implements Runnable, KeyListener {
+public class SuperficieRectangulo extends JFrame implements Runnable, KeyListener {
     private boolean isRunning;
     private BufferedImage bufferImage;
     private BufferedImage buffer;
@@ -22,9 +22,9 @@ public class CurvaExplicita extends JFrame implements Runnable, KeyListener {
     private final int WIDTH = 700;
     private final int HEIGHT = 700;
 
-    public CurvaExplicita() {
+    public SuperficieRectangulo() {
         setSize(WIDTH, HEIGHT);
-        setTitle("Curva 3D con movimiento y rotación");
+        setTitle("Superficie Paramétrica 3D con movimiento y rotación");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         addKeyListener(this);
@@ -72,8 +72,8 @@ public class CurvaExplicita extends JFrame implements Runnable, KeyListener {
         // Clear the buffer
         graPixel.drawImage(bufferEscenario, 0, 0, null);
 
-        // Draw the curve
-        drawCurve(graPixel);
+        // Draw the surface
+        drawSurface(graPixel);
 
         // Paint the buffer on screen
         Graphics g = getGraphics();
@@ -83,7 +83,7 @@ public class CurvaExplicita extends JFrame implements Runnable, KeyListener {
         }
     }
 
-    /****************** CURVE MOVEMENT *******************/
+    /****************** MESH MOVEMENT *******************/
     @Override
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
@@ -106,10 +106,12 @@ public class CurvaExplicita extends JFrame implements Runnable, KeyListener {
             case KeyEvent.VK_S:
                 translateZ += MOVE_SPEED;
                 break;
-            case KeyEvent.VK_PLUS: case KeyEvent.VK_ADD:
+            case KeyEvent.VK_PLUS:
+            case KeyEvent.VK_ADD:
                 scaleFactor += 0.1;
                 break;
-            case KeyEvent.VK_MINUS: case KeyEvent.VK_SUBTRACT:
+            case KeyEvent.VK_MINUS:
+            case KeyEvent.VK_SUBTRACT:
                 scaleFactor = Math.max(0.1, scaleFactor - 0.1);
                 break;
             case KeyEvent.VK_Q:
@@ -154,19 +156,39 @@ public class CurvaExplicita extends JFrame implements Runnable, KeyListener {
         fillPolygonScanLine(gEscenario, xPoints, yPoints, Color.BLACK);
     }
 
-    public void drawCurve(Graphics g) {
-        double tStart = 0;
-        double tEnd = 8 * Math.PI;
-        double tStep = 0.1;
+    public void drawSurface(Graphics g) {
+        int rows = 10;
+        int cols = 10;
+        double sStart = -5;
+        double sEnd = 5;
+        double tStart = -5;
+        double tEnd = 5;
 
-        double prevX = Math.cos(tStart);
-        double prevY = Math.sin(tStart);
-        double prevZ = tStart;
+        double sStep = (sEnd - sStart) / rows;
+        double tStep = (tEnd - tStart) / cols;
 
-        for (double t = tStart + tStep; t <= tEnd; t += tStep) {
-            double x = Math.cos(t);
-            double y = Math.sin(t);
-            double z = t;
+        // Draw horizontal curves
+        for (int i = 0; i <= rows; i++) {
+            double s = sStart + i * sStep;
+            drawCurve(g, s, tStart, tEnd, tStep, true);
+        }
+
+        // Draw vertical curves
+        for (int j = 0; j <= cols; j++) {
+            double t = tStart + j * tStep;
+            drawCurve(g, t, sStart, sEnd, sStep, false);
+        }
+    }
+
+    public void drawCurve(Graphics g, double fixedParam, double varStart, double varEnd, double varStep, boolean isHorizontal) {
+        double prevX = isHorizontal ? f1(fixedParam, varStart) : f1(varStart, fixedParam);
+        double prevY = isHorizontal ? f2(fixedParam, varStart) : f2(varStart, fixedParam);
+        double prevZ = isHorizontal ? f3(fixedParam, varStart) : f3(varStart, fixedParam);
+
+        for (double var = varStart + varStep; var <= varEnd; var += varStep) {
+            double x = isHorizontal ? f1(fixedParam, var) : f1(var, fixedParam);
+            double y = isHorizontal ? f2(fixedParam, var) : f2(var, fixedParam);
+            double z = isHorizontal ? f3(fixedParam, var) : f3(var, fixedParam);
 
             double[] prevRotatedX = rotateX(new double[]{prevX, prevY, prevZ}, angleX);
             double[] prevRotatedXY = rotateY(prevRotatedX, angleY);
@@ -185,6 +207,22 @@ public class CurvaExplicita extends JFrame implements Runnable, KeyListener {
             prevZ = z;
         }
     }
+
+    private double f1(double s, double t) {
+        // parametric function for x
+        return s;
+    }
+
+    private double f2(double s, double t) {
+        // parametric function for y
+        return t;
+    }
+
+    private double f3(double s, double t) {
+        // parametric function for z (deformation)
+        return Math.sin(s) * Math.cos(t);
+    }
+
 
     private double[] rotateX(double[] vertex, double angle) {
         double[] rotated = new double[3];
@@ -216,8 +254,6 @@ public class CurvaExplicita extends JFrame implements Runnable, KeyListener {
         int y = (int) ((vertex[1] + translateY) * factor) + HEIGHT / 2; // Translate to center
         return new int[]{x, y};
     }
-
-
 
     public void drawBresenhamLine(Graphics g, int x0, int y0, int x1, int y1, Color color) {
         int dx = Math.abs(x1 - x0);
@@ -275,7 +311,7 @@ public class CurvaExplicita extends JFrame implements Runnable, KeyListener {
     }
 
     public static void main(String[] args) {
-        Cilindro curva = new Cilindro();
+        SuperficieRectangulo curva = new SuperficieRectangulo();
         Thread mainThread = new Thread(curva);
         mainThread.start();
     }

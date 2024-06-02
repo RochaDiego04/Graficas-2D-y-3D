@@ -24,7 +24,7 @@ public class SuperficieRectangulo extends JFrame implements Runnable, KeyListene
 
     public SuperficieRectangulo() {
         setSize(WIDTH, HEIGHT);
-        setTitle("Superficie Paramétrica 3D con movimiento y rotación");
+        setTitle("Superficie Relieve 3D con movimiento y rotación");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         addKeyListener(this);

@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 
-public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
+public class Cilindro extends JFrame implements Runnable, KeyListener {
     private boolean isRunning;
     private BufferedImage bufferImage;
     private BufferedImage buffer;
@@ -16,15 +16,15 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
     private Graphics graPixel;
     private Graphics gEscenario;
     private double translateX = 0, translateY = 0, translateZ = 0;
-    private double angleX = 0, angleY = 0, angleZ = 0; // Angles of rotation around each axis
+    private double angleX = 0, angleY = 0, angleZ = 0;
     private int MOVE_SPEED = 1;
     private double scaleFactor = 20.0;
     private final int WIDTH = 700;
     private final int HEIGHT = 700;
 
-    public SuperficieEsfera() {
+    public Cilindro() {
         setSize(WIDTH, HEIGHT);
-        setTitle("Superficie Esfera 3D con movimiento y rotación");
+        setTitle("Cilindro (Reloj de Arena)");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         addKeyListener(this);
@@ -157,25 +157,27 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
     }
 
     public void drawSurface(Graphics g) {
-        int rows = 10;
-        int cols = 10;
-        double sStart = 0;
-        double sEnd = 2 * Math.PI;
+        int rows = 20;
+        int cols = 20;
         double tStart = 0;
-        double tEnd = 2 * Math.PI;
-        double sStep = (sEnd - sStart) / rows;
-        double tStep = (tEnd - tStart) / cols;
+        double tEnd = 6;
+        double rhoStart = 0;
+        double rhoEnd = 2 * Math.PI;
+
+
+        double sStep = (tEnd - tStart) / rows;
+        double tStep = (rhoEnd - rhoStart) / cols;
 
         // Draw horizontal curves
         for (int i = 0; i <= rows; i++) {
-            double s = sStart + i * sStep;
-            drawCurve(g, s, tStart, tEnd, tStep, true);
+            double s = tStart + i * sStep;
+            drawCurve(g, s, rhoStart, rhoEnd, tStep, true);
         }
 
         // Draw vertical curves
         for (int j = 0; j <= cols; j++) {
-            double t = tStart + j * tStep;
-            drawCurve(g, t, sStart, sEnd, sStep, false);
+            double t = rhoStart + j * tStep;
+            drawCurve(g, t, tStart, tEnd, sStep, false);
         }
     }
 
@@ -199,7 +201,7 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
             double[] rotatedXYZ = rotateZ(rotatedXY, angleZ);
             int[] projected = project(rotatedXYZ);
 
-            drawBresenhamLine(g, prevProjected[0], prevProjected[1], projected[0], projected[1], Color.RED);
+            drawBresenhamLine(g, prevProjected[0], prevProjected[1], projected[0], projected[1]);
 
             prevX = x;
             prevY = y;
@@ -207,20 +209,21 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
         }
     }
 
-    private double f1(double s, double t) {
+    private double f1(double t, double rho) {
         // parametric function for x
-        return Math.cos(s) * Math.cos(t);
+        return (2 + Math.cos(t)) * Math.cos(rho);
     }
 
-    private double f2(double s, double t) {
+    private double f2(double t, double rho) {
         // parametric function for y
-        return Math.sin(s) * Math.cos(t);
+        return (2 + Math.cos(t)) * Math.sin(rho);
     }
 
-    private double f3(double s, double t) {
-        // parametric function for z
-        return Math.sin(t);
+    private double f3(double t, double rho) {
+        // parametric function for z (deformation)
+        return t - 3;
     }
+
 
     private double[] rotateX(double[] vertex, double angle) {
         double[] rotated = new double[3];
@@ -279,6 +282,39 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
             }
         }
     }
+
+    // Bresenham line with color that depends on the height of the line
+    public void drawBresenhamLine(Graphics gra, int x0, int y0, int x1, int y1) {
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
+        int e2;
+
+        while (true) {
+            // Interpolate between red and purple based on the y-coordinate
+            float t = Math.max(0, Math.min(1, (float)y0 / HEIGHT)); // Clamp t to the range [0, 1]
+            Color color = Color.getHSBColor(t * 0.90f, 1f, 1f);
+
+            putPixel(gra, x0, y0, color);
+
+            if (x0 == x1 && y0 == y1) {
+                break;
+            }
+
+            e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                x0 += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                y0 += sy;
+            }
+        }
+    }
+
 
     public void fillPolygonScanLine(Graphics g, int[] xPoints, int[] yPoints, Color color) {
         int minY = Arrays.stream(yPoints).min().getAsInt();

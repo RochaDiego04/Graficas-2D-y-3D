@@ -70,11 +70,11 @@ En este parcial, implementamos nuestra propia librería gráfica 2D. Comenzamos 
   - ScanLine
 
 <p align="center">
-    <img src="img/parcial2_1.png" width="400px">
-    <img src="img/parcial2_2.png" width="400px">
-    <img src="img/parcial2_3.png" width="400px">
-    <img src="img/parcial2_4.png" width="400px">
-    <img src="img/parcial2_5.png" width="400px">
+    <img src="img/Parcial2_1.png" width="400px">
+    <img src="img/Parcial2_2.png" width="400px">
+    <img src="img/Parcial2_3.png" width="400px">
+    <img src="img/Parcial2_4.png" width="400px">
+    <img src="img/Parcial2_5.png" width="400px">
 </p>
 
 ## Proyecto 2. Juego de Donkey Kong 🚀
@@ -136,10 +136,10 @@ En este parcial, exploramos la impresión de objetos 3D en pantalla, empleando d
   - Implementación de métodos de traslación, escalamiento y rotación.
 
 <p align="center">
-    <img src="img/parcial3_1.png" width="400px">
-    <img src="img/parcial3_2.png" width="400px">
-    <img src="img/parcial3_3.png" width="400px">
-    <img src="img/parcial3_4.png" width="400px">
-    <img src="img/parcial3_5.png" width="400px">
-    <img src="img/parcial3_6.png" width="400px">
+    <img src="img/Parcial3_1.png" width="400px">
+    <img src="img/Parcial3_2.png" width="400px">
+    <img src="img/Parcial3_3.png" width="400px">
+    <img src="img/Parcial3_4.png" width="400px">
+    <img src="img/Parcial3_5.png" width="400px">
+    <img src="img/Parcial3_6.png" width="400px">
 </p>

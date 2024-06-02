@@ -275,7 +275,7 @@ public class CurvaExplicita extends JFrame implements Runnable, KeyListener {
     }
 
     public static void main(String[] args) {
-        Cilindro curva = new Cilindro();
+        CurvaExplicita curva = new CurvaExplicita();
         Thread mainThread = new Thread(curva);
         mainThread.start();
     }

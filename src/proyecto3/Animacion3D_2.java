@@ -1,14 +1,16 @@
-package parcial3;
+package proyecto3;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
+public class Animacion3D_2 extends JFrame implements Runnable {
     private boolean isRunning;
     private BufferedImage bufferImage;
     private BufferedImage buffer;
@@ -16,18 +18,18 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
     private Graphics graPixel;
     private Graphics gEscenario;
     private double translateX = 0, translateY = 0, translateZ = 0;
-    private double angleX = 0, angleY = 0, angleZ = 0; // Angles of rotation around each axis
+    private double angleX = 175, angleY = 0, angleZ = 0;
     private int MOVE_SPEED = 1;
-    private double scaleFactor = 20.0;
+    private double scaleFactor = 80.0;
     private final int WIDTH = 700;
     private final int HEIGHT = 700;
+    private double serpenteo = 0;
 
-    public SuperficieEsfera() {
+    public Animacion3D_2() {
         setSize(WIDTH, HEIGHT);
-        setTitle("Superficie Esfera 3D con movimiento y rotación");
+        setTitle("Cilindro (Reloj de Arena)");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        addKeyListener(this);
 
         isRunning = true;
 
@@ -46,6 +48,11 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
         drawScene(gEscenario);
 
         while (isRunning) {
+            // Actualiza el valor de serpenteo
+            serpenteo += 0.1;
+            angleX += .05;
+            angleY += .05;
+            angleZ += .05;
             repaint();
             try {
                 Thread.sleep(10);
@@ -83,66 +90,6 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
         }
     }
 
-    /****************** MESH MOVEMENT *******************/
-    @Override
-    public void keyPressed(KeyEvent e) {
-        int keyCode = e.getKeyCode();
-        switch (keyCode) {
-            case KeyEvent.VK_LEFT:
-                translateX -= MOVE_SPEED;
-                break;
-            case KeyEvent.VK_RIGHT:
-                translateX += MOVE_SPEED;
-                break;
-            case KeyEvent.VK_UP:
-                translateY -= MOVE_SPEED;
-                break;
-            case KeyEvent.VK_DOWN:
-                translateY += MOVE_SPEED;
-                break;
-            case KeyEvent.VK_W:
-                translateZ -= MOVE_SPEED;
-                break;
-            case KeyEvent.VK_S:
-                translateZ += MOVE_SPEED;
-                break;
-            case KeyEvent.VK_PLUS:
-            case KeyEvent.VK_ADD:
-                scaleFactor += 0.1;
-                break;
-            case KeyEvent.VK_MINUS:
-            case KeyEvent.VK_SUBTRACT:
-                scaleFactor = Math.max(0.1, scaleFactor - 0.1);
-                break;
-            case KeyEvent.VK_Q:
-                angleX -= Math.toRadians(5);
-                break;
-            case KeyEvent.VK_E:
-                angleX += Math.toRadians(5);
-                break;
-            case KeyEvent.VK_A:
-                angleY -= Math.toRadians(5);
-                break;
-            case KeyEvent.VK_D:
-                angleY += Math.toRadians(5);
-                break;
-            case KeyEvent.VK_Z:
-                angleZ -= Math.toRadians(5);
-                break;
-            case KeyEvent.VK_C:
-                angleZ += Math.toRadians(5);
-                break;
-        }
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-    }
-
     /****************** GRAPHIC PAINT METHODS *******************/
 
     private void putPixel(Graphics g, int x, int y, Color color) {
@@ -157,27 +104,68 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
     }
 
     public void drawSurface(Graphics g) {
-        int rows = 30;
-        int cols = 30;
-        double sStart = 0;
-        double sEnd = 2 * Math.PI;
-        double tStart = 0;
-        double tEnd = 2 * Math.PI;
-        double sStep = (sEnd - sStart) / rows;
-        double tStep = (tEnd - tStart) / cols;
+        int rows = 60;
+        int cols = 60;
+        double tStart = 0 + serpenteo;
+        double tEnd = 6 + serpenteo;
+        double rhoStart = 0;
+        double rhoEnd = 2 * Math.PI;
 
-        // Draw horizontal curves
+        double sStep = (tEnd - tStart) / rows;
+        double tStep = (rhoEnd - rhoStart) / cols;
+
+        // Calculate points for the grid
+        double[][][] points = new double[rows + 1][cols + 1][3];
         for (int i = 0; i <= rows; i++) {
-            double s = sStart + i * sStep;
-            drawCurve(g, s, tStart, tEnd, tStep, true);
+            double s = tStart + i * sStep;
+            for (int j = 0; j <= cols; j++) {
+                double t = rhoStart + j * tStep;
+                points[i][j][0] = f1(s, t);
+                points[i][j][1] = f2(s, t);
+                points[i][j][2] = f3(s, t);
+            }
         }
 
-        // Draw vertical curves
-        for (int j = 0; j <= cols; j++) {
-            double t = tStart + j * tStep;
-            drawCurve(g, t, sStart, sEnd, sStep, false);
+        // Draw and fill polygons
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                double[] p1 = points[i][j];
+                double[] p2 = points[i][j + 1];
+                double[] p3 = points[i + 1][j + 1];
+                double[] p4 = points[i + 1][j];
+
+                drawFilledPolygon(g, p1, p2, p3, p4);
+            }
         }
     }
+
+    private void drawFilledPolygon(Graphics g, double[] p1, double[] p2, double[] p3, double[] p4) {
+        double[][] vertices = {p1, p2, p3, p4};
+        int[] xPoints = new int[4];
+        int[] yPoints = new int[4];
+
+        for (int i = 0; i < 4; i++) {
+            double[] rotatedX = rotateX(vertices[i], angleX);
+            double[] rotatedXY = rotateY(rotatedX, angleY);
+            double[] rotatedXYZ = rotateZ(rotatedXY, angleZ);
+            int[] projected = project(rotatedXYZ);
+
+            xPoints[i] = projected[0];
+            yPoints[i] = projected[1];
+        }
+
+        Color color = calculateColor(p1, p2, p3, p4);
+        fillPolygonScanLine(g, xPoints, yPoints, color);
+    }
+
+    private Color calculateColor(double[] p1, double[] p2, double[] p3, double[] p4) {
+        double averageHeight = (p1[2] + p2[2] + p3[2] + p4[2]) / 4.0;
+        float t = (float) ((averageHeight + 3) / 6.0);
+        t = Math.max(0, Math.min(1, t));
+        return Color.getHSBColor(t * 0.85f, 1f, 1f); // Multiplicar t por un factor para variar los tonos
+    }
+
+
 
     public void drawCurve(Graphics g, double fixedParam, double varStart, double varEnd, double varStep, boolean isHorizontal) {
         double prevX = isHorizontal ? f1(fixedParam, varStart) : f1(varStart, fixedParam);
@@ -199,7 +187,7 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
             double[] rotatedXYZ = rotateZ(rotatedXY, angleZ);
             int[] projected = project(rotatedXYZ);
 
-            drawBresenhamLine(g, prevProjected[0], prevProjected[1], projected[0], projected[1], Color.RED);
+            drawBresenhamLine(g, prevProjected[0], prevProjected[1], projected[0], projected[1]);
 
             prevX = x;
             prevY = y;
@@ -207,20 +195,21 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
         }
     }
 
-    private double f1(double s, double t) {
+    private double f1(double t, double rho) {
         // parametric function for x
-        return Math.cos(s) * Math.cos(t);
+        return (2 + Math.cos(t)) * Math.cos(rho);
     }
 
-    private double f2(double s, double t) {
+    private double f2(double t, double rho) {
         // parametric function for y
-        return Math.sin(s) * Math.cos(t);
+        return (2 + Math.cos(t)) * Math.sin(rho);
     }
 
-    private double f3(double s, double t) {
-        // parametric function for z
-        return Math.sin(t);
+    private double f3(double t, double rho) {
+        // parametric function for z (deformation)
+        return t - 3 - serpenteo;
     }
+
 
     private double[] rotateX(double[] vertex, double angle) {
         double[] rotated = new double[3];
@@ -280,6 +269,39 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
         }
     }
 
+    // Bresenham line with color that depends on the height of the line
+    public void drawBresenhamLine(Graphics gra, int x0, int y0, int x1, int y1) {
+        int dx = Math.abs(x1 - x0);
+        int dy = Math.abs(y1 - y0);
+        int sx = x0 < x1 ? 1 : -1;
+        int sy = y0 < y1 ? 1 : -1;
+        int err = dx - dy;
+        int e2;
+
+        while (true) {
+            // Interpolate between red and purple based on the y-coordinate
+            float t = Math.max(0, Math.min(1, (float)y0 / HEIGHT)); // Clamp t to the range [0, 1]
+            Color color = Color.getHSBColor(t * 0.90f, 1f, 1f);
+
+            putPixel(gra, x0, y0, color);
+
+            if (x0 == x1 && y0 == y1) {
+                break;
+            }
+
+            e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                x0 += sx;
+            }
+            if (e2 < dx) {
+                err += dx;
+                y0 += sy;
+            }
+        }
+    }
+
+
     public void fillPolygonScanLine(Graphics g, int[] xPoints, int[] yPoints, Color color) {
         int minY = Arrays.stream(yPoints).min().getAsInt();
         int maxY = Arrays.stream(yPoints).max().getAsInt();
@@ -309,8 +331,8 @@ public class SuperficieEsfera extends JFrame implements Runnable, KeyListener {
     }
 
     public static void main(String[] args) {
-        SuperficieEsfera curva = new SuperficieEsfera();
-        Thread mainThread = new Thread(curva);
+        Animacion3D_2 animacion = new Animacion3D_2();
+        Thread mainThread = new Thread(animacion);
         mainThread.start();
     }
 }
